@@ -3,14 +3,12 @@ workflows:
     name: ZeroG iOS — Ad Hoc
     max_build_duration: 60
 
-    integrations:
-      app_store_connect: zerog-signing   # Connected in Team Settings → Developer Portal
-
     environment:
+      groups:
+        - signing_v3   # CERT_PRIVATE_KEY, APP_STORE_CONNECT_*, BUNDLE_ID — all fresh, no corruption
       vars:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
-        BUNDLE_ID: com.zerog.companion
       node: 20
       xcode: 16
 
@@ -39,13 +37,18 @@ workflows:
             --identifier "$BUNDLE_ID" \
             --name "ZeroG" \
             --platform IOS 2>/dev/null || true
-          # Fetch Ad Hoc profile + certificate (GUI-managed cert — no --certificate-key needed)
+          # Fetch Ad Hoc distribution cert + provisioning profile
+          # CERT_PRIVATE_KEY is PKCS#8 format — accepted by app-store-connect CLI
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_ADHOC \
+            --certificate-key @env:CERT_PRIVATE_KEY \
             --create
 
       - name: Add certificates to keychain
-        script: keychain add-certificates
+        script: |
+          keychain add-certificates
+          echo "=== Valid signing identities ==="
+          security find-identity -v -p codesigning || true
 
       - name: Set Xcode signing settings
         script: xcode-project use-profiles
@@ -81,14 +84,12 @@ workflows:
     name: ZeroG iOS — TestFlight
     max_build_duration: 60
 
-    integrations:
-      app_store_connect: zerog-signing
-
     environment:
+      groups:
+        - signing_v3
       vars:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
-        BUNDLE_ID: com.zerog.companion
       node: 20
       xcode: 16
 
@@ -125,6 +126,7 @@ workflows:
             --platform IOS 2>/dev/null || true
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
+            --certificate-key @env:CERT_PRIVATE_KEY \
             --create
 
       - name: Add certificates to keychain
@@ -144,7 +146,7 @@ workflows:
 
     publishing:
       app_store_connect:
-        auth: integration
+        auth: environment_variables
         submit_to_testflight: true
       email:
         recipients:
