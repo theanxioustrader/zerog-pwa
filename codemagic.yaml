@@ -55,17 +55,42 @@ workflows:
 
       - name: Build IPA
         script: |
-          mkdir -p /tmp/xcodebuild_logs
-          xcode-project build-ipa \
-            --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --config Release \
-            2>&1 | tee /tmp/xcodebuild_logs/build-ipa.log; exitCode=${PIPESTATUS[0]}
-          if [ $exitCode -ne 0 ]; then
-            echo "=== BUILD FAILED — last 100 lines ==="
-            tail -100 /tmp/xcodebuild_logs/build-ipa.log
-            exit $exitCode
+          mkdir -p /tmp/xcodebuild_logs build/ios/ipa
+          # Detect provisioning profile UUID from downloaded profiles
+          PROFILE_UUID=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null | head -1 | sed 's/\.mobileprovision//' || echo "")
+          echo "Using profile UUID: $PROFILE_UUID"
+          # Run archive with FULL output captured — no suppression
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -archivePath /tmp/App.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM=V9K7MGMA4F \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
+            2>&1 | tee /tmp/xcodebuild_logs/archive.log; archiveExit=${PIPESTATUS[0]}
+          if [ $archiveExit -ne 0 ]; then
+            echo "=== ARCHIVE FAILED (last 100 lines) ==="
+            tail -100 /tmp/xcodebuild_logs/archive.log
+            exit $archiveExit
           fi
+          # Export IPA
+          cat > /tmp/ExportOptions.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>ad-hoc</string>
+            <key>teamID</key><string>V9K7MGMA4F</string>
+            <key>compileBitcode</key><false/>
+          </dict></plist>
+PLIST
+          xcodebuild -exportArchive \
+            -archivePath /tmp/App.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            2>&1 | tee /tmp/xcodebuild_logs/export.log
 
     artifacts:
       - build/ios/ipa/*.ipa
