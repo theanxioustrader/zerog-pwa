@@ -65,7 +65,7 @@ workflows:
           mkdir -p /tmp/xcodebuild_logs build/ios/ipa
           KEYCHAIN=$(security list-keychains | tr -d '" ' | grep cm-signing | head -1)
           security unlock-keychain -p "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
-          xcodebuild \
+          xcodebuild archive \
             -project ios/App/App.xcodeproj \
             -scheme App \
             -configuration Release \
@@ -162,7 +162,7 @@ workflows:
           mkdir -p /tmp/xcodebuild_logs build/ios/ipa
           KEYCHAIN=$(security list-keychains | tr -d '" ' | grep cm-signing | head -1)
           security unlock-keychain -p "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
-          xcodebuild \
+          xcodebuild archive \
             -project ios/App/App.xcodeproj \
             -scheme App \
             -configuration Release \
