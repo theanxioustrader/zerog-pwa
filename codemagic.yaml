@@ -37,12 +37,11 @@ workflows:
             --identifier "$BUNDLE_ID" \
             --name "ZeroG" \
             --platform IOS 2>/dev/null || true
-          # Generate a fresh RSA key for the distribution certificate
-          openssl genrsa -out /tmp/dist_cert_key.pem 2048
           # Fetch or create Ad Hoc distribution certificate + provisioning profile
+          # Uses the CERTIFICATE_PRIVATE_KEY stored in Codemagic env vars
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_ADHOC \
-            --certificate-key @file:/tmp/dist_cert_key.pem \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
             --create
 
       - name: Add certificates to keychain
@@ -115,10 +114,9 @@ workflows:
             --identifier "$BUNDLE_ID" \
             --name "ZeroG" \
             --platform IOS 2>/dev/null || true
-          openssl genrsa -out /tmp/dist_cert_key.pem 2048
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --certificate-key @file:/tmp/dist_cert_key.pem \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
             --create
 
       - name: Add certificates to keychain
