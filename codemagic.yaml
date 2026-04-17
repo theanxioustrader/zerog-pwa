@@ -6,6 +6,7 @@ workflows:
     environment:
       groups:
         - ios_signing   # APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_PRIVATE_KEY, BUNDLE_ID
+        - cert_keys     # DIST_CERT_KEY — RSA PKCS#1 private key for distribution cert
       vars:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
@@ -38,9 +39,9 @@ workflows:
             --name "ZeroG" \
             --platform IOS 2>/dev/null || true
           # Write cert key to temp file (prevents newline encoding issues)
-          printf '%s' "$CERTIFICATE_PRIVATE_KEY" > /tmp/cert_key.pem
+          printf '%s' "$DIST_CERT_KEY" > /tmp/cert_key.pem
           echo "" >> /tmp/cert_key.pem
-          head -c 100 /tmp/cert_key.pem | cat  # debug: shows first line of key
+          echo "--- cert key first line: $(head -1 /tmp/cert_key.pem)"  # debug
           # Fetch or create Ad Hoc distribution certificate + provisioning profile
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_ADHOC \
