@@ -60,8 +60,6 @@ workflows:
       - name: Build IPA
         script: |
           mkdir -p /tmp/xcodebuild_logs build/ios/ipa
-          PROFILE_UUID=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null | head -1 | sed 's/\.mobileprovision//' || echo "")
-          echo "Profile UUID: $PROFILE_UUID"
           KEYCHAIN=$(security list-keychains | tr -d '" ' | grep cm-signing | head -1)
           security unlock-keychain -p "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
           xcodebuild \
@@ -73,7 +71,6 @@ workflows:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM=V9K7MGMA4F \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
             2>&1 | tee /tmp/xcodebuild_logs/archive.log; archiveExit=${PIPESTATUS[0]}
           if [ $archiveExit -ne 0 ]; then
             echo "=== ARCHIVE FAILED (last 100 lines) ==="
