@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ZeroG</string>
+    <string name="title_activity_main">ZeroG</string>
+    <string name="package_name">com.zerog.companion</string>
+    <string name="custom_url_scheme">com.zerog.companion</string>
+</resources>
