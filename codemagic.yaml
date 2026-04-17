@@ -52,31 +52,21 @@ workflows:
 
       - name: Build IPA
         script: |
-          # Step 1: Archive
-          xcodebuild archive \
-            -project ios/App/App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -archivePath /tmp/App.xcarchive \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Manual
-          # Step 2: Create export options plist
-          TEAM_ID=$(xcodebuild -project ios/App/App.xcodeproj -scheme App -showBuildSettings 2>/dev/null | grep ' DEVELOPMENT_TEAM' | head -1 | sed 's/.*= //')
-          cat > /tmp/ExportOptions.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0"><dict>
-            <key>method</key><string>ad-hoc</string>
-            <key>teamID</key><string>${TEAM_ID}</string>
-            <key>compileBitcode</key><false/>
-          </dict></plist>
-          EOF
-          # Step 3: Export IPA
-          mkdir -p build/ios/ipa
-          xcodebuild -exportArchive \
-            -archivePath /tmp/App.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist /tmp/ExportOptions.plist
+          mkdir -p /tmp/xcodebuild_logs
+          # First list available schemes for debug
+          xcodebuild -project ios/App/App.xcodeproj -list 2>&1 | tee /tmp/xcodebuild_logs/list.log || true
+          # Build IPA using Codemagic helper (handles signing automatically)
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME" \
+            --config Release \
+            2>&1 | tee /tmp/xcodebuild_logs/build-ipa.log; exitCode=${PIPESTATUS[0]}
+          # Print last 80 lines of log on failure so error is visible in Codemagic UI
+          if [ $exitCode -ne 0 ]; then
+            echo "=== BUILD FAILED — last 80 lines ==="
+            tail -80 /tmp/xcodebuild_logs/build-ipa.log
+            exit $exitCode
+          fi
 
     artifacts:
       - build/ios/ipa/*.ipa
