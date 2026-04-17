@@ -7,11 +7,10 @@ workflows:
       app_store_connect: zerog-signing   # Connected in Team Settings → Developer Portal
 
     environment:
-      groups:
-        - ios_signing   # BUNDLE_ID, APP_STORE_CONNECT_* env vars for CLI fallback
       vars:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
+        BUNDLE_ID: com.zerog.companion
       node: 20
       xcode: 16
 
@@ -86,11 +85,10 @@ workflows:
       app_store_connect: zerog-signing
 
     environment:
-      groups:
-        - ios_signing
       vars:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
+        BUNDLE_ID: com.zerog.companion
       node: 20
       xcode: 16
 
