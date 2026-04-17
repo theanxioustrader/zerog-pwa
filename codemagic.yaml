@@ -2,7 +2,6 @@ workflows:
   ios-development:
     name: ZeroG iOS — Ad Hoc
     max_build_duration: 60
-    instance_type: mac_mini_m2
     
     environment:
       groups:
@@ -68,7 +67,6 @@ workflows:
   ios-testflight:
     name: ZeroG iOS — TestFlight
     max_build_duration: 60
-    instance_type: mac_mini_m2
 
     environment:
       groups:
