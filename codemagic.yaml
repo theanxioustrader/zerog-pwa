@@ -1,0 +1,118 @@
+workflows:
+  ios-testflight:
+    name: ZeroG iOS — TestFlight
+    max_build_duration: 60
+    environment:
+      ios_signing:
+        distribution_type: app_store   # produces .ipa for TestFlight / App Store
+        bundle_identifier: com.zerog.companion
+      vars:
+        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_SCHEME: App
+      node: 20.x
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      # 1. Install JS dependencies
+      - name: Install npm dependencies
+        script: npm ci
+
+      # 2. Build the Vite/React web bundle
+      - name: Build web app
+        script: npm run build
+
+      # 3. Add iOS platform if not already present, then sync
+      - name: Capacitor iOS sync
+        script: |
+          npx cap add ios 2>/dev/null || true
+          npx cap sync ios
+
+      # 4. Install CocoaPods dependencies
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install
+
+      # 5. Set version and build number from git tag or run number
+      - name: Set build number
+        script: |
+          LATEST_BUILD=$(app-store-connect get-latest-testflight-build-number "$APPLE_APP_ID" 2>/dev/null || echo 0)
+          agvtool new-version -all "$((LATEST_BUILD + 1))"
+
+      # 6. Build the Xcode archive (.ipa)
+      - name: Build IPA
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
+
+  ios-development:
+    name: ZeroG iOS — Ad Hoc (no App Store needed)
+    max_build_duration: 60
+    environment:
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: com.zerog.companion
+      vars:
+        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_SCHEME: App
+      node: 20.x
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Install npm dependencies
+        script: npm ci
+
+      - name: Build web app
+        script: npm run build
+
+      - name: Capacitor iOS sync
+        script: |
+          npx cap add ios 2>/dev/null || true
+          npx cap sync ios
+
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install
+
+      - name: Build IPA (Ad Hoc)
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      email:
+        recipients:
+          - akiva613@gmail.com
+        notify:
+          success: true
+          failure: true
