@@ -7,7 +7,7 @@ workflows:
       groups:
         - ios_signing   # APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_PRIVATE_KEY, BUNDLE_ID
       vars:
-        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
       node: 20
       xcode: latest
@@ -26,9 +26,7 @@ workflows:
           cp -r dist/ ios/App/App/public
 
       - name: Install CocoaPods
-        script: |
-          cd ios/App
-          pod install
+        script: echo "Capacitor 8 uses Swift Package Manager — no pod install needed"
 
       - name: Initialize keychain
         script: keychain initialize
@@ -48,7 +46,7 @@ workflows:
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
@@ -72,7 +70,7 @@ workflows:
       groups:
         - ios_signing
       vars:
-        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
       node: 20
       xcode: latest
@@ -99,8 +97,7 @@ workflows:
 
       - name: Install CocoaPods
         script: |
-          cd ios/App
-          pod install
+          echo "Capacitor 8 uses Swift Package Manager — no pod install needed"
 
       - name: Initialize keychain
         script: keychain initialize
@@ -120,7 +117,7 @@ workflows:
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
