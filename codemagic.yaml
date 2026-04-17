@@ -56,17 +56,22 @@ workflows:
 
       - name: Verify keychain + import private key
         script: |
-          KEYCHAIN=~/Library/Keychains/cm-signing.keychain
-          echo "=== Signing identities in keychain BEFORE key import ==="
+          echo "=== All keychains ==="
+          security list-keychains
+          # Find the Codemagic signing keychain dynamically
+          KEYCHAIN=$(security list-keychains | tr -d '" ' | grep -i "cm-signing" | head -1)
+          echo "Found keychain: $KEYCHAIN"
+          echo "=== Signing identities BEFORE import ==="
           security find-identity -v -p codesigning "$KEYCHAIN" || true
-          echo "=== Explicitly importing RSA private key into signing keychain ==="
+          echo "=== Importing RSA private key ==="
           printf '%s' "$DIST_CERT_KEY" > /tmp/cert_key.pem
           echo "" >> /tmp/cert_key.pem
           security import /tmp/cert_key.pem \
             -k "$KEYCHAIN" \
             -T /usr/bin/codesign \
-            -T /usr/bin/security || echo "Key import note: already exists or format issue"
-          echo "=== Signing identities AFTER key import ==="
+            -T /usr/bin/security && echo "Key imported OK" || echo "Import failed or already exists"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" "$KEYCHAIN" 2>/dev/null || true
+          echo "=== Signing identities AFTER import ==="
           security find-identity -v -p codesigning "$KEYCHAIN" || true
 
       - name: Build IPA
