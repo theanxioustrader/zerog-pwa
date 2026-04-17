@@ -80,8 +80,29 @@ workflows:
             tail -100 /tmp/xcodebuild_logs/archive.log
             exit $archiveExit
           fi
-          xcode-project build-ipa \
-            --archive-path /tmp/App.xcarchive
+          PROFILE_PATH=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision 2>/dev/null | head -1)
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$(security cms -D -i "$PROFILE_PATH")")
+          echo "Using profile: $PROFILE_NAME"
+          cat > /tmp/ExportOptions.plist << PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>method</key><string>app-store-connect</string>
+<key>teamID</key><string>V9K7MGMA4F</string>
+<key>compileBitcode</key><false/>
+<key>signingStyle</key><string>manual</string>
+<key>signingCertificate</key><string>Apple Distribution</string>
+<key>provisioningProfiles</key><dict>
+<key>com.zerog.companion</key><string>$PROFILE_NAME</string>
+</dict>
+</dict></plist>
+PLIST_EOF
+          mkdir -p build/ios/ipa
+          xcodebuild -exportArchive \
+            -archivePath /tmp/App.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            2>&1 | tee /tmp/xcodebuild_logs/export.log
 
     artifacts:
       - build/ios/ipa/*.ipa
@@ -173,8 +194,28 @@ workflows:
             tail -100 /tmp/xcodebuild_logs/archive.log
             exit $archiveExit
           fi
-          xcode-project build-ipa \
-            --archive-path /tmp/App.xcarchive
+          PROFILE_PATH=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision 2>/dev/null | head -1)
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$(security cms -D -i "$PROFILE_PATH")")
+          echo "Using profile: $PROFILE_NAME"
+          cat > /tmp/ExportOptions.plist << PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>method</key><string>app-store-connect</string>
+<key>teamID</key><string>V9K7MGMA4F</string>
+<key>compileBitcode</key><false/>
+<key>signingStyle</key><string>manual</string>
+<key>signingCertificate</key><string>Apple Distribution</string>
+<key>provisioningProfiles</key><dict>
+<key>com.zerog.companion</key><string>$PROFILE_NAME</string>
+</dict>
+</dict></plist>
+PLIST_EOF
+          xcodebuild -exportArchive \
+            -archivePath /tmp/App.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            2>&1 | tee /tmp/xcodebuild_logs/export.log
 
     artifacts:
       - build/ios/ipa/*.ipa
