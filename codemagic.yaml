@@ -19,8 +19,13 @@ workflows:
       - name: Build web app
         script: npm run build
 
-      - name: Sync Capacitor (web assets + config files)
-        script: npx cap sync ios
+      - name: Copy web assets + generate iOS config files
+        script: |
+          rm -rf ios/App/App/public
+          cp -r dist/ ios/App/App/public
+          # capacitor.config.json and config.xml are gitignored but required by xcodebuild
+          cp capacitor.config.json ios/App/App/capacitor.config.json
+          printf "<?xml version='1.0' encoding='utf-8'?>\n<widget version=\"1.0.0\" xmlns=\"http://www.w3.org/ns/widgets\" xmlns:cdv=\"http://cordova.apache.org/ns/1.0\">\n  <access origin=\"*\" />\n</widget>\n" > ios/App/App/config.xml
 
       - name: Install CocoaPods
         script: echo "Capacitor 8 uses Swift Package Manager — no pod install needed"
