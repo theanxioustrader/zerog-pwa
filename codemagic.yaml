@@ -37,11 +37,14 @@ workflows:
             --identifier "$BUNDLE_ID" \
             --name "ZeroG" \
             --platform IOS 2>/dev/null || true
+          # Write cert key to temp file (prevents newline encoding issues)
+          printf '%s' "$CERTIFICATE_PRIVATE_KEY" > /tmp/cert_key.pem
+          echo "" >> /tmp/cert_key.pem
+          head -c 100 /tmp/cert_key.pem | cat  # debug: shows first line of key
           # Fetch or create Ad Hoc distribution certificate + provisioning profile
-          # Uses the CERTIFICATE_PRIVATE_KEY stored in Codemagic env vars
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_ADHOC \
-            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
+            --certificate-key @file:/tmp/cert_key.pem \
             --create
 
       - name: Add certificates to keychain
