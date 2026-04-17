@@ -127,10 +127,12 @@ workflows:
       - name: Build web app
         script: npm run build
 
-      - name: Copy web assets into iOS project
+      - name: Copy web assets + generate iOS config files
         script: |
           rm -rf ios/App/App/public
           cp -r dist/ ios/App/App/public
+          cp capacitor.config.json ios/App/App/capacitor.config.json
+          printf "<?xml version='1.0' encoding='utf-8'?>\n<widget version=\"1.0.0\" xmlns=\"http://www.w3.org/ns/widgets\" xmlns:cdv=\"http://cordova.apache.org/ns/1.0\">\n  <access origin=\"*\" />\n</widget>\n" > ios/App/App/config.xml
 
       - name: Install CocoaPods
         script: echo "Capacitor 8 uses Swift Package Manager — no pod install needed"
@@ -150,19 +152,46 @@ workflows:
             --create
 
       - name: Add certificates to keychain
-        script: keychain add-certificates
+        script: |
+          keychain add-certificates
+          KEYCHAIN=$(security list-keychains | tr -d '" ' | grep cm-signing | head -1)
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
+          echo "=== Valid signing identities ==="
+          security find-identity -v -p codesigning "$KEYCHAIN" || true
 
       - name: Set Xcode signing settings
         script: xcode-project use-profiles
 
       - name: Build IPA
         script: |
-          xcode-project build-ipa \
-            --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+          mkdir -p /tmp/xcodebuild_logs build/ios/ipa
+          KEYCHAIN=$(security list-keychains | tr -d '" ' | grep cm-signing | head -1)
+          security unlock-keychain -p "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -archivePath /tmp/App.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM=V9K7MGMA4F \
+            2>&1 | tee /tmp/xcodebuild_logs/archive.log; archiveExit=${PIPESTATUS[0]}
+          if [ $archiveExit -ne 0 ]; then
+            echo "=== ARCHIVE FAILED (last 100 lines) ==="
+            tail -100 /tmp/xcodebuild_logs/archive.log
+            exit $archiveExit
+          fi
+          printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "">\n<plist version="1.0"><dict>\n<key>method</key><string>app-store</string>\n<key>teamID</key><string>V9K7MGMA4F</string>\n<key>compileBitcode</key><false/>\n</dict></plist>\n' > /tmp/ExportOptions.plist
+          xcodebuild -exportArchive \
+            -archivePath /tmp/App.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            2>&1 | tee /tmp/xcodebuild_logs/export.log
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
 
     publishing:
       app_store_connect:
