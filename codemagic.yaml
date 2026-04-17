@@ -10,8 +10,7 @@ workflows:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
       node: 20
-      xcode: latest
-      cocoapods: default
+      xcode: 16
 
     scripts:
       - name: Install npm dependencies
@@ -82,8 +81,7 @@ workflows:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
       node: 20
-      xcode: latest
-      cocoapods: default
+      xcode: 16
 
     triggering:
       events:
