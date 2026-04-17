@@ -113,13 +113,6 @@ workflows:
       node: 20
       xcode: 16
 
-    triggering:
-      events:
-        - tag
-      branch_patterns:
-        - pattern: main
-          include: true
-
     scripts:
       - name: Install npm dependencies
         script: npm ci
