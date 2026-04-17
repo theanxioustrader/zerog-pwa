@@ -33,6 +33,12 @@ workflows:
 
       - name: Fetch signing files via App Store Connect API
         script: |
+          # Register bundle ID first (idempotent — safe to run even if it exists)
+          app-store-connect create-bundle-id \
+            --identifier "$BUNDLE_ID" \
+            --name "ZeroG" \
+            --platform IOS 2>/dev/null || true
+          # Fetch/create distribution certificate + ad-hoc provisioning profile
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_ADHOC \
             --create
