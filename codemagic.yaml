@@ -2,11 +2,13 @@ workflows:
   ios-development:
     name: ZeroG iOS — Ad Hoc
     max_build_duration: 60
-    
+
+    integrations:
+      app_store_connect: zerog-signing   # Connected in Team Settings → Developer Portal
+
     environment:
       groups:
-        - ios_signing   # APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_PRIVATE_KEY, BUNDLE_ID
-        - cert_keys     # DIST_CERT_KEY — RSA PKCS#1 private key for distribution cert
+        - ios_signing   # BUNDLE_ID, APP_STORE_CONNECT_* env vars for CLI fallback
       vars:
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
@@ -31,21 +33,16 @@ workflows:
       - name: Initialize keychain
         script: keychain initialize
 
-      - name: Fetch signing files via App Store Connect API
+      - name: Fetch signing files
         script: |
           # Register bundle ID (idempotent)
           app-store-connect create-bundle-id \
             --identifier "$BUNDLE_ID" \
             --name "ZeroG" \
             --platform IOS 2>/dev/null || true
-          # Write cert key to temp file (prevents newline encoding issues)
-          printf '%s' "$DIST_CERT_KEY" > /tmp/cert_key.pem
-          echo "" >> /tmp/cert_key.pem
-          echo "--- cert key first line: $(head -1 /tmp/cert_key.pem)"  # debug
-          # Fetch or create Ad Hoc distribution certificate + provisioning profile
+          # Fetch Ad Hoc profile + certificate (GUI-managed cert — no --certificate-key needed)
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_ADHOC \
-            --certificate-key @file:/tmp/cert_key.pem \
             --create
 
       - name: Add certificates to keychain
@@ -54,39 +51,17 @@ workflows:
       - name: Set Xcode signing settings
         script: xcode-project use-profiles
 
-      - name: Verify keychain + import private key
-        script: |
-          echo "=== All keychains ==="
-          security list-keychains
-          # Find the Codemagic signing keychain dynamically
-          KEYCHAIN=$(security list-keychains | tr -d '" ' | grep -i "cm-signing" | head -1)
-          echo "Found keychain: $KEYCHAIN"
-          echo "=== Signing identities BEFORE import ==="
-          security find-identity -v -p codesigning "$KEYCHAIN" || true
-          echo "=== Importing RSA private key ==="
-          printf '%s' "$DIST_CERT_KEY" > /tmp/cert_key.pem
-          echo "" >> /tmp/cert_key.pem
-          security import /tmp/cert_key.pem \
-            -k "$KEYCHAIN" \
-            -T /usr/bin/codesign \
-            -T /usr/bin/security && echo "Key imported OK" || echo "Import failed or already exists"
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" "$KEYCHAIN" 2>/dev/null || true
-          echo "=== Signing identities AFTER import ==="
-          security find-identity -v -p codesigning "$KEYCHAIN" || true
-
       - name: Build IPA
         script: |
           mkdir -p /tmp/xcodebuild_logs
-          # Build IPA using Codemagic helper (handles signing automatically)
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME" \
             --config Release \
             2>&1 | tee /tmp/xcodebuild_logs/build-ipa.log; exitCode=${PIPESTATUS[0]}
-          # Print last 80 lines of log on failure so error is visible in Codemagic UI
           if [ $exitCode -ne 0 ]; then
-            echo "=== BUILD FAILED — last 80 lines ==="
-            tail -80 /tmp/xcodebuild_logs/build-ipa.log
+            echo "=== BUILD FAILED — last 100 lines ==="
+            tail -100 /tmp/xcodebuild_logs/build-ipa.log
             exit $exitCode
           fi
 
@@ -106,6 +81,9 @@ workflows:
   ios-testflight:
     name: ZeroG iOS — TestFlight
     max_build_duration: 60
+
+    integrations:
+      app_store_connect: zerog-signing
 
     environment:
       groups:
@@ -136,8 +114,7 @@ workflows:
           cp -r dist/ ios/App/App/public
 
       - name: Install CocoaPods
-        script: |
-          echo "Capacitor 8 uses Swift Package Manager — no pod install needed"
+        script: echo "Capacitor 8 uses Swift Package Manager — no pod install needed"
 
       - name: Initialize keychain
         script: keychain initialize
@@ -150,7 +127,6 @@ workflows:
             --platform IOS 2>/dev/null || true
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
             --create
 
       - name: Add certificates to keychain
@@ -170,7 +146,7 @@ workflows:
 
     publishing:
       app_store_connect:
-        auth: environment_variables
+        auth: integration
         submit_to_testflight: true
       email:
         recipients:
