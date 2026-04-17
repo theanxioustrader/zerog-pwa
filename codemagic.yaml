@@ -47,8 +47,12 @@ workflows:
       - name: Add certificates to keychain
         script: |
           keychain add-certificates
+          # Unlock keychain and grant codesign access (prevents errSecInternalComponent in headless CI)
+          KEYCHAIN=$(security list-keychains | tr -d '" ' | grep cm-signing | head -1)
+          echo "Keychain: $KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
           echo "=== Valid signing identities ==="
-          security find-identity -v -p codesigning || true
+          security find-identity -v -p codesigning "$KEYCHAIN" || true
 
       - name: Set Xcode signing settings
         script: xcode-project use-profiles
@@ -56,10 +60,13 @@ workflows:
       - name: Build IPA
         script: |
           mkdir -p /tmp/xcodebuild_logs build/ios/ipa
-          # Detect provisioning profile UUID from downloaded profiles
+          # Detect provisioning profile UUID
           PROFILE_UUID=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null | head -1 | sed 's/\.mobileprovision//' || echo "")
           echo "Using profile UUID: $PROFILE_UUID"
-          # Run archive with FULL output captured — no suppression
+          # Unlock keychain just before codesign (prevents access timeout)
+          KEYCHAIN=$(security list-keychains | tr -d '" ' | grep cm-signing | head -1)
+          security unlock-keychain -p "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
+          # Full xcodebuild archive with ALL output captured
           xcodebuild \
             -project ios/App/App.xcodeproj \
             -scheme App \
@@ -76,16 +83,17 @@ workflows:
             tail -100 /tmp/xcodebuild_logs/archive.log
             exit $archiveExit
           fi
-          # Export IPA
-          cat > /tmp/ExportOptions.plist <<'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0"><dict>
-            <key>method</key><string>ad-hoc</string>
-            <key>teamID</key><string>V9K7MGMA4F</string>
-            <key>compileBitcode</key><false/>
-          </dict></plist>
-PLIST
+          # Write ExportOptions.plist using python3 (avoids YAML heredoc issues)
+          python3 -c "
+          content = '''<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\"><dict>
+  <key>method</key><string>ad-hoc</string>
+  <key>teamID</key><string>V9K7MGMA4F</string>
+  <key>compileBitcode</key><false/>
+</dict></plist>'''
+          open('/tmp/ExportOptions.plist','w').write(content)
+          "
           xcodebuild -exportArchive \
             -archivePath /tmp/App.xcarchive \
             -exportPath build/ios/ipa \
