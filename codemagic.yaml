@@ -103,10 +103,10 @@ workflows:
   ios-testflight:
     name: ZeroG iOS — TestFlight
     max_build_duration: 60
+    integrations:
+      app_store_connect: zerog-signing
 
     environment:
-      integrations:
-        app_store_connect: zerog-signing
       groups:
         - signing_v3
       vars:
