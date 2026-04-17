@@ -20,8 +20,10 @@ workflows:
       - name: Build web app
         script: npm run build
 
-      - name: Sync Capacitor (iOS)
-        script: npx cap sync ios
+      - name: Copy web assets into iOS project
+        script: |
+          rm -rf ios/App/App/public
+          cp -r dist/ ios/App/App/public
 
       - name: Install CocoaPods
         script: |
@@ -90,8 +92,10 @@ workflows:
       - name: Build web app
         script: npm run build
 
-      - name: Sync Capacitor (iOS)
-        script: npx cap sync ios
+      - name: Copy web assets into iOS project
+        script: |
+          rm -rf ios/App/App/public
+          cp -r dist/ ios/App/App/public
 
       - name: Install CocoaPods
         script: |
