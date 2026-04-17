@@ -81,8 +81,7 @@ workflows:
             exit $archiveExit
           fi
           xcode-project build-ipa \
-            --archive-path /tmp/App.xcarchive \
-            --export-path build/ios/ipa
+            --archive-path /tmp/App.xcarchive
 
     artifacts:
       - build/ios/ipa/*.ipa
@@ -175,8 +174,7 @@ workflows:
             exit $archiveExit
           fi
           xcode-project build-ipa \
-            --archive-path /tmp/App.xcarchive \
-            --export-path build/ios/ipa
+            --archive-path /tmp/App.xcarchive
 
     artifacts:
       - build/ios/ipa/*.ipa
