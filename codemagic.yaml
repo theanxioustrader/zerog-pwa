@@ -83,20 +83,21 @@ workflows:
           PROFILE_PATH=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision 2>/dev/null | head -1)
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$(security cms -D -i "$PROFILE_PATH")")
           echo "Using profile: $PROFILE_NAME"
-          cat > /tmp/ExportOptions.plist << PLIST_EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-<key>method</key><string>app-store-connect</string>
-<key>teamID</key><string>V9K7MGMA4F</string>
-<key>compileBitcode</key><false/>
-<key>signingStyle</key><string>manual</string>
-<key>signingCertificate</key><string>Apple Distribution</string>
-<key>provisioningProfiles</key><dict>
-<key>com.zerog.companion</key><string>$PROFILE_NAME</string>
-</dict>
-</dict></plist>
-PLIST_EOF
+          {
+            echo '<?xml version="1.0" encoding="UTF-8"?>'
+            echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+            echo '<plist version="1.0"><dict>'
+            echo '<key>method</key><string>app-store-connect</string>'
+            echo '<key>teamID</key><string>V9K7MGMA4F</string>'
+            echo '<key>compileBitcode</key><false/>'
+            echo '<key>signingStyle</key><string>manual</string>'
+            echo '<key>signingCertificate</key><string>Apple Distribution</string>'
+            echo '<key>provisioningProfiles</key><dict>'
+            echo "<key>com.zerog.companion</key><string>$PROFILE_NAME</string>"
+            echo '</dict>'
+            echo '</dict></plist>'
+          } > /tmp/ExportOptions.plist
+          cat /tmp/ExportOptions.plist
           mkdir -p build/ios/ipa
           xcodebuild -exportArchive \
             -archivePath /tmp/App.xcarchive \
@@ -197,20 +198,22 @@ PLIST_EOF
           PROFILE_PATH=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision 2>/dev/null | head -1)
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$(security cms -D -i "$PROFILE_PATH")")
           echo "Using profile: $PROFILE_NAME"
-          cat > /tmp/ExportOptions.plist << PLIST_EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-<key>method</key><string>app-store-connect</string>
-<key>teamID</key><string>V9K7MGMA4F</string>
-<key>compileBitcode</key><false/>
-<key>signingStyle</key><string>manual</string>
-<key>signingCertificate</key><string>Apple Distribution</string>
-<key>provisioningProfiles</key><dict>
-<key>com.zerog.companion</key><string>$PROFILE_NAME</string>
-</dict>
-</dict></plist>
-PLIST_EOF
+          {
+            echo '<?xml version="1.0" encoding="UTF-8"?>'
+            echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+            echo '<plist version="1.0"><dict>'
+            echo '<key>method</key><string>app-store-connect</string>'
+            echo '<key>teamID</key><string>V9K7MGMA4F</string>'
+            echo '<key>compileBitcode</key><false/>'
+            echo '<key>signingStyle</key><string>manual</string>'
+            echo '<key>signingCertificate</key><string>Apple Distribution</string>'
+            echo '<key>provisioningProfiles</key><dict>'
+            echo "<key>com.zerog.companion</key><string>$PROFILE_NAME</string>"
+            echo '</dict>'
+            echo '</dict></plist>'
+          } > /tmp/ExportOptions.plist
+          cat /tmp/ExportOptions.plist
+          mkdir -p build/ios/ipa
           xcodebuild -exportArchive \
             -archivePath /tmp/App.xcarchive \
             -exportPath build/ios/ipa \
