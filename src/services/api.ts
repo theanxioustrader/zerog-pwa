@@ -227,4 +227,15 @@ export const api = {
         });
       } catch {}
    },
+   pingBridge: async () => {
+      if (!AG_BRIDGE_URL) throw new Error('No bridge configured');
+      const res = await fetch(`${AG_BRIDGE_URL.replace(/\/$/, '')}/health`, {
+        signal: AbortSignal.timeout(6000),
+        headers: { 'bypass-tunnel-reminder': '1', 'x-ag-token': AG_TOKEN },
+      });
+      if (!res.ok) throw new Error('Bridge not responding');
+      const data = await res.json();
+      if (!data.ok) throw new Error('Bridge unhealthy');
+      return data;
+   },
 };

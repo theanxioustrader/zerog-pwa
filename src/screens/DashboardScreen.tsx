@@ -46,6 +46,21 @@ export function DashboardScreen({
   const [quickMsg, setQuickMsg] = useState('');
   const [sending, setSending] = useState(false);
   const [macroConfirm, setMacroConfirm] = useState<typeof MACROS[0] | null>(null);
+  const [pinging, setPinging] = useState(false);
+  const [pingResult, setPingResult] = useState<'ok' | 'fail' | null>(null);
+
+  const handlePingPC = useCallback(async () => {
+    setPinging(true);
+    setPingResult(null);
+    try {
+      await api.pingBridge();
+      setPingResult('ok');
+    } catch {
+      setPingResult('fail');
+    }
+    setPinging(false);
+    setTimeout(() => setPingResult(null), 4000);
+  }, []);
 
   const handleQuickSend = useCallback(async () => {
     if (!quickMsg.trim() || sending) return;
@@ -100,6 +115,27 @@ export function DashboardScreen({
             </div>
           </div>
           <div className="dash-divider" />
+
+          {/* Offline banner — only shown when PC is disconnected */}
+          {!agentConnected && (
+            <div className="dash-offline-banner">
+              <div className="dash-offline-text">
+                <span className="dash-offline-icon">💤</span>
+                <div>
+                  <div className="dash-offline-title">Your PC is offline</div>
+                  <div className="dash-offline-sub">Make sure your PC is awake and the ZeroG bridge is running.</div>
+                </div>
+              </div>
+              <button
+                className={`dash-wake-btn ${pinging ? 'pinging' : ''} ${pingResult === 'ok' ? 'wake-ok' : ''} ${pingResult === 'fail' ? 'wake-fail' : ''}`}
+                onClick={handlePingPC}
+                disabled={pinging}
+              >
+                {pinging ? '⏳ Pinging…' : pingResult === 'ok' ? '✅ Online!' : pingResult === 'fail' ? '❌ Still offline' : '📡 Ping PC'}
+              </button>
+            </div>
+          )}
+
           <button className="dash-chat-launch" onClick={onOpenChat}>
             <span>💬</span>
             <span className="dash-chat-launch-text">Open Chat</span>

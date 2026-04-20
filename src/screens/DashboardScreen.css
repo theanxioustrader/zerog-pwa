@@ -140,6 +140,68 @@
 
 .dash-divider { height: 1px; background: var(--border); }
 
+/* Offline banner */
+.dash-offline-banner {
+  padding: 14px 18px;
+  background: rgba(251, 146, 60, 0.06);
+  border-top: 1px solid rgba(251, 146, 60, 0.2);
+  border-bottom: 1px solid rgba(251, 146, 60, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dash-offline-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.dash-offline-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+
+.dash-offline-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fb923c;
+  margin-bottom: 3px;
+}
+
+.dash-offline-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.dash-wake-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  color: #fb923c;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.15s, color 0.15s;
+}
+.dash-wake-btn.pinging {
+  opacity: 0.7;
+  animation: pulse-soft 1s ease-in-out infinite;
+}
+.dash-wake-btn.wake-ok {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--green);
+}
+.dash-wake-btn.wake-fail {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--red);
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
 .dash-chat-launch {
   display: flex;
   align-items: center;
