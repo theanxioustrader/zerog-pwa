@@ -22,7 +22,7 @@ function App() {
   const [bridgeError, setBridgeError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [agentConnected, setAgentConnected] = useState(false);
-  const [pendingDialog, setPendingDialog] = useState<{ primaryText: string; primaryButton: string; dialogs: any[] } | null>(null);
+  const [pendingDialog, setPendingDialog] = useState<{ permissionText: string; conversationId?: string; ts?: number } | null>(null);
 
   // Client-side dedup: Track recently seen message hashes to drop duplicates
   // that arrive from multiple WS connections within a 3s window.
@@ -202,17 +202,9 @@ function App() {
             <div style={{ fontSize: 13, color: '#a0a0c0', fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>
               ANTIGRAVITY REQUESTS APPROVAL
             </div>
-            <div style={{ fontSize: 17, color: '#e0e0ff', fontWeight: 600, marginBottom: 16 }}>
-              {pendingDialog.primaryText}
+            <div style={{ fontSize: 17, color: '#e0e0ff', fontWeight: 600, marginBottom: 16, lineHeight: 1.5 }}>
+              {pendingDialog.permissionText || 'Antigravity is requesting approval to proceed.'}
             </div>
-            {pendingDialog.dialogs?.map((d: any, i: number) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.05)', borderRadius: 10,
-                padding: '10px 14px', marginBottom: 8, fontSize: 14, color: '#c0c0e0',
-              }}>
-                {d.text || d.label || JSON.stringify(d)}
-              </div>
-            ))}
             <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
               <button onClick={async () => {
                 await import('./services/api').then(m => m.api.approvePermission('deny')).catch(() => {});
@@ -232,7 +224,7 @@ function App() {
                 background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                 color: '#fff', border: 'none', fontSize: 15, fontWeight: 700,
               }}>
-                {pendingDialog.primaryButton || 'Allow'}
+                Allow
               </button>
             </div>
           </div>
