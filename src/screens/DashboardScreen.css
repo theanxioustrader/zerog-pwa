@@ -165,6 +165,59 @@
   font-weight: 600;
 }
 
+/* Approvals button */
+.dash-approvals-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  width: 100%;
+  text-align: left;
+  border-top: 1px solid var(--border);
+  transition: background 0.15s;
+  border-radius: 0 0 18px 18px;
+}
+.dash-approvals-btn:active { background: var(--surface-2); }
+
+.dash-approvals-btn.has-pending {
+  border-top-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.dash-approvals-text {
+  flex: 1;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dash-approvals-btn.has-pending .dash-approvals-text {
+  color: #f87171;
+}
+
+.dash-approvals-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 20px;
+  padding: 3px 9px;
+  min-width: 24px;
+  text-align: center;
+  animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+.dash-approvals-none {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
 /* ── Sections ─────────────────────────────── */
 .dash-section { display: flex; flex-direction: column; gap: 10px; }
 

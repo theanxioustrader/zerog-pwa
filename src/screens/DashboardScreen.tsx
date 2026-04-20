@@ -8,9 +8,11 @@ interface Props {
   conversations: Conversation[];
   activeConversation?: string;
   agentConnected: boolean;
+  pendingApprovalsCount: number;
   onOpenChat: () => void;
   onSelectConversation: (conv: Conversation) => void;
   onSettings: () => void;
+  onApprovals: () => void;
 }
 
 function relativeTime(ts: number): string {
@@ -33,9 +35,11 @@ export function DashboardScreen({
   conversations,
   activeConversation,
   agentConnected,
+  pendingApprovalsCount,
   onOpenChat,
   onSelectConversation,
   onSettings,
+  onApprovals,
 }: Props) {
   const [quickMsg, setQuickMsg] = useState('');
   const [sending, setSending] = useState(false);
@@ -98,6 +102,20 @@ export function DashboardScreen({
             <span>💬</span>
             <span className="dash-chat-launch-text">Open Chat</span>
             <span className="dash-chat-launch-arrow">→</span>
+          </button>
+
+          {/* Approvals button — always visible, badge shows count */}
+          <button
+            className={`dash-approvals-btn ${pendingApprovalsCount > 0 ? 'has-pending' : ''}`}
+            onClick={onApprovals}
+          >
+            <span>🔐</span>
+            <span className="dash-approvals-text">Pending Approvals</span>
+            {pendingApprovalsCount > 0 ? (
+              <span className="dash-approvals-badge">{pendingApprovalsCount}</span>
+            ) : (
+              <span className="dash-approvals-none">None</span>
+            )}
           </button>
         </div>
 

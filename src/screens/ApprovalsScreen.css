@@ -1,0 +1,220 @@
+.approvals-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* Header */
+.approvals-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  padding-top: max(env(safe-area-inset-top, 44px), 44px);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.approvals-back {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--accent);
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.approvals-back:active { background: var(--surface-2); }
+
+.approvals-title-wrap {
+  flex: 1;
+}
+
+.approvals-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 2px;
+}
+
+.approvals-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.approvals-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 20px;
+  padding: 3px 9px;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Bulk actions */
+.approvals-bulk {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.approvals-bulk-deny {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.approvals-bulk-deny:active { background: rgba(239, 68, 68, 0.22); }
+
+.approvals-bulk-allow {
+  flex: 2;
+  padding: 10px 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.35);
+  transition: opacity 0.15s;
+}
+.approvals-bulk-allow:active { opacity: 0.85; }
+
+/* List */
+.approvals-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Empty */
+.approvals-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 80px;
+  gap: 10px;
+}
+
+.approvals-empty-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.approvals-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.approvals-empty-sub {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Item card */
+.approvals-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.approvals-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.approvals-item-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.approvals-item-ts {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.approvals-item-conv {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.approvals-item-text {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.approvals-item-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.approvals-deny-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.approvals-deny-btn:active { background: rgba(239, 68, 68, 0.2); }
+
+.approvals-allow-btn {
+  flex: 2;
+  padding: 10px 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1cc, #8b5cf6cc);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+.approvals-allow-btn:active { opacity: 0.8; }
