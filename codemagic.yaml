@@ -136,6 +136,14 @@ workflows:
     integrations:
       app_store_connect: zerog-signing
 
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: master
+          include: true
+          source: true
+
     environment:
       groups:
         - signing_v3
