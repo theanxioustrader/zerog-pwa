@@ -253,6 +253,7 @@
   overflow-y: auto;
   padding: var(--spacing-md);
   padding-top: 72px; /* flat header height + status bar; avoids double env() calc */
+  padding-bottom: 16px; /* breathing room above input bar */
   display: flex;
   flex-direction: column;
   /* Anchor new messages to the bottom */
@@ -412,7 +413,9 @@
 .input-container {
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* Cap safe-area at 34px — prevents double-counting with contentInset:automatic */
+  padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+  flex-shrink: 0;
 }
 
 .attachment-preview {

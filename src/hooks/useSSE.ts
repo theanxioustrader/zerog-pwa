@@ -79,6 +79,13 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
     if (!mountedRef.current) return;
     if (intentionalDisconnect.current) return;
 
+    // If already open or connecting, don't create a second connection
+    if (wsRef.current &&
+        (wsRef.current.readyState === WebSocket.OPEN ||
+         wsRef.current.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+
     if (!isConnected()) {
       setSSEStatus('disconnected');
       callbacksRef.current.onStatusChange?.(false);
@@ -230,7 +237,7 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
         wsRef.current = null;
       }
     };
-  }, [token, connect, clearPingWatchdog]);
+  }, [token, clearPingWatchdog]);
 
   const disconnect = useCallback(() => {
     intentionalDisconnect.current = true;
