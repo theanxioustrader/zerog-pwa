@@ -62,6 +62,12 @@ workflows:
           agvtool new-version -all $BUILD_NUMBER || \
             /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
 
+      - name: Set build number
+        script: |
+          cd ios/App
+          agvtool new-version -all $BUILD_NUMBER
+          echo "Build number set to: $BUILD_NUMBER"
+
       - name: Set Xcode signing settings
         script: xcode-project use-profiles
 
@@ -177,6 +183,12 @@ workflows:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$CM_KEYCHAIN_PASSWORD" "$KEYCHAIN" 2>/dev/null || true
           echo "=== Valid signing identities ==="
           security find-identity -v -p codesigning "$KEYCHAIN" || true
+
+      - name: Set build number
+        script: |
+          cd ios/App
+          agvtool new-version -all $BUILD_NUMBER
+          echo "Build number set to: $BUILD_NUMBER"
 
       - name: Set Xcode signing settings
         script: xcode-project use-profiles
