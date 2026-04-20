@@ -6,6 +6,9 @@
     "androidScheme": "https",
     "cleartext": false
   },
+  "ios": {
+    "contentInset": "automatic"
+  },
   "plugins": {
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]

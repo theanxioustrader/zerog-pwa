@@ -173,12 +173,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
             </div>
           </div>
         </div>
-        {onSettings && (
-          <button className="icon-btn" onClick={onSettings} aria-label="Settings">⚙</button>
-        )}
+        <div className="header-right">
+          <button className="icon-btn" onClick={() => setShowMenu(true)} aria-label="Switch conversation">▼</button>
+          {onSettings && (
+            <button className="icon-btn" onClick={onSettings} aria-label="Settings">⚙</button>
+          )}
+        </div>
       </header>
-
-      {/* Menu Overlay */}
       {showMenu && (
         <div className="menu-overlay" onClick={() => setShowMenu(false)}>
           <div className="menu-box" onClick={(e) => e.stopPropagation()}>

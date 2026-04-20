@@ -115,6 +115,13 @@
   font-size: 12px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 /* Menu Dropdown Overlay */
 .menu-overlay {
   position: absolute;
