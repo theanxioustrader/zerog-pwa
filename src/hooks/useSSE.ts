@@ -19,7 +19,7 @@ interface UseSSEOptions {
   token: string | null;
   onReply?: (msg: Message) => void;
   onStatusChange?: (connected: boolean) => void;
-  onPermissionRequest?: (dialog: { primaryText: string; primaryButton: string; dialogs: any[] }) => void;
+  onPermissionRequest?: (dialog: { permissionText: string; conversationId?: string; ts?: number }) => void;
   onBridgeError?: (err: { message: string; recoverable: boolean; errorCount: number }) => void;
 }
 
