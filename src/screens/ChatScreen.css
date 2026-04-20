@@ -19,12 +19,14 @@
   padding-top: max(var(--spacing-sm), env(safe-area-inset-top, 12px));
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
-  z-index: 20;
+  z-index: 100;
   min-height: 64px;
-  /* Always visible — sticks to top even if parent somehow overflows */
-  position: sticky;
+  /* Fixed so keyboard open/close never moves the header */
+  position: fixed;
   top: 0;
-  flex-shrink: 0; /* never compress the header when messages overflow */
+  left: 0;
+  right: 0;
+  flex-shrink: 0;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -250,6 +252,7 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-md);
+  padding-top: calc(64px + max(var(--spacing-md), env(safe-area-inset-top, 12px)));
   display: flex;
   flex-direction: column;
 }
