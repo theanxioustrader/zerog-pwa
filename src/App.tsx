@@ -51,16 +51,18 @@ function App() {
   };
 
   const addMessage = useCallback((msg: Message) => {
+    // Dedup: normalize text and hash it — reject if seen within last 5s.
+    // Must run OUTSIDE setMessages updater so it's synchronous and immediate.
+    const normalized = msg.text.trim().replace(/\s+/g, ' ');
+    const h = normalized.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+    const now = Date.now();
+    for (const [k, t] of recentMsgHashes.current.entries()) {
+      if (now - t > 5000) recentMsgHashes.current.delete(k);
+    }
+    if (recentMsgHashes.current.has(h)) return; // duplicate — drop silently
+    recentMsgHashes.current.set(h, now);
+
     setMessages((prev) => {
-      // Dedup: hash the message text and drop if seen within last 3s
-      const h = msg.text.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
-      const now = Date.now();
-      // Purge stale hashes older than 3s
-      for (const [k, t] of recentMsgHashes.current.entries()) {
-        if (now - t > 3000) recentMsgHashes.current.delete(k);
-      }
-      if (recentMsgHashes.current.has(h)) return prev; // duplicate — drop it
-      recentMsgHashes.current.set(h, now);
       const next = [...prev, msg];
       setTimeout(() => messageCache.save(activeConversation, next), 0);
       return next;
