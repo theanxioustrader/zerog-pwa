@@ -10,8 +10,9 @@ import { ChatScreen } from './screens/ChatScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ApprovalsScreen } from './screens/ApprovalsScreen';
 import type { PendingPermission } from './screens/ApprovalsScreen';
+import { SupportScreen } from './screens/SupportScreen';
 
-type Screen = 'dashboard' | 'chat' | 'settings' | 'approvals';
+type Screen = 'dashboard' | 'chat' | 'settings' | 'approvals' | 'support';
 
 function App() {
   const [token, setToken] = useState<string | null>(null);
@@ -27,8 +28,6 @@ function App() {
 
   // Approvals: accumulate all pending permission requests
   const [pendingPermissions, setPendingPermissions] = useState<PendingPermission[]>([]);
-  // Pop-up modal for the most recent one (shown in-chat)
-  const [modalPermission, setModalPermission] = useState<PendingPermission | null>(null);
 
   // Client-side dedup: Track recently seen message hashes to drop duplicates
   // that arrive from multiple WS connections within a 3s window.
@@ -54,7 +53,6 @@ function App() {
     setConversations([]);
     setActiveConversation(undefined);
     setPendingPermissions([]);
-    setModalPermission(null);
     setScreen('dashboard');
   };
 
@@ -102,8 +100,8 @@ function App() {
       };
       // Add to persistent list
       setPendingPermissions(prev => [...prev, perm]);
-      // Show immediate pop-up modal
-      setModalPermission(perm);
+      // Navigate directly to Approvals as a full page
+      setScreen('approvals');
     },
   });
 
@@ -157,13 +155,11 @@ function App() {
   const handleApproveAll = async () => {
     await api.approvePermission('allow').catch(() => {});
     setPendingPermissions([]);
-    setModalPermission(null);
   };
 
   const handleDenyAll = async () => {
     await api.approvePermission('deny').catch(() => {});
     setPendingPermissions([]);
-    setModalPermission(null);
   };
 
   if (loading) return null;
@@ -179,6 +175,15 @@ function App() {
         activeConversation={activeConversation}
         onSelectConversation={handleSelectConversation}
         onLogout={handleLogout}
+        onBack={() => setScreen('dashboard')}
+      />
+    );
+  }
+
+  if (screen === 'support') {
+    return (
+      <SupportScreen
+        token={token}
         onBack={() => setScreen('dashboard')}
       />
     );
@@ -209,6 +214,7 @@ function App() {
         onSelectConversation={handleSelectConversation}
         onSettings={() => setScreen('settings')}
         onApprovals={() => setScreen('approvals')}
+      onSupport={() => setScreen('support')}
       />
     );
   }
@@ -233,58 +239,6 @@ function App() {
         onBack={handleBackToDashboard}
         onSettings={() => setScreen('settings')}
       />
-
-      {/* ── Real-time Permission Modal (most recent request) ── */}
-      {modalPermission && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(0,0,0,0.75)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          padding: `0 0 max(env(safe-area-inset-bottom, 20px), 20px) 0`,
-        }}>
-          <div style={{
-            width: '92%', maxWidth: 420,
-            background: '#1e1e2e', borderRadius: 20,
-            border: '1px solid rgba(99,102,241,0.3)',
-            padding: '24px 20px',
-            boxShadow: '0 -4px 40px rgba(0,0,0,0.6)',
-          }}>
-            <div style={{ fontSize: 13, color: '#a0a0c0', fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>
-              🔐 ANTIGRAVITY REQUESTS APPROVAL
-            </div>
-            <div style={{ fontSize: 16, color: '#e0e0ff', fontWeight: 600, marginBottom: 4, lineHeight: 1.5 }}>
-              {modalPermission.permissionText || 'Antigravity is requesting approval to proceed.'}
-            </div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 16 }}>
-              {pendingPermissions.length > 1 ? `+${pendingPermissions.length - 1} more pending — view all in Approvals` : ''}
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={async () => {
-                await api.approvePermission('deny').catch(() => {});
-                removePermission(modalPermission.id);
-                setModalPermission(null);
-              }} style={{
-                flex: 1, padding: '13px 0', borderRadius: 12,
-                background: 'rgba(255,255,255,0.08)', color: '#e0e0ff',
-                border: '1px solid rgba(255,255,255,0.1)', fontSize: 15, fontWeight: 600,
-              }}>
-                Deny
-              </button>
-              <button onClick={async () => {
-                await api.approvePermission('allow').catch(() => {});
-                removePermission(modalPermission.id);
-                setModalPermission(null);
-              }} style={{
-                flex: 2, padding: '13px 0', borderRadius: 12,
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                color: '#fff', border: 'none', fontSize: 15, fontWeight: 700,
-              }}>
-                Allow
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

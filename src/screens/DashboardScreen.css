@@ -218,6 +218,32 @@
   font-weight: 500;
 }
 
+/* Support button */
+.dash-support-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  width: 100%;
+  text-align: left;
+  border-top: 1px solid var(--border);
+  transition: background 0.15s;
+  border-radius: 0 0 18px 18px;
+}
+.dash-support-btn:active { background: var(--surface-2); }
+
+.dash-support-text {
+  flex: 1;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dash-support-arrow {
+  color: var(--muted);
+  font-size: 18px;
+}
+
 /* ── Sections ─────────────────────────────── */
 .dash-section { display: flex; flex-direction: column; gap: 10px; }
 

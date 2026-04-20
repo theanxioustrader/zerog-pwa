@@ -13,6 +13,7 @@ interface Props {
   onSelectConversation: (conv: Conversation) => void;
   onSettings: () => void;
   onApprovals: () => void;
+  onSupport: () => void;
 }
 
 function relativeTime(ts: number): string {
@@ -40,6 +41,7 @@ export function DashboardScreen({
   onSelectConversation,
   onSettings,
   onApprovals,
+  onSupport,
 }: Props) {
   const [quickMsg, setQuickMsg] = useState('');
   const [sending, setSending] = useState(false);
@@ -116,6 +118,13 @@ export function DashboardScreen({
             ) : (
               <span className="dash-approvals-none">None</span>
             )}
+          </button>
+
+          {/* Support button */}
+          <button className="dash-support-btn" onClick={onSupport}>
+            <span>🛟</span>
+            <span className="dash-support-text">Support & Known Issues</span>
+            <span className="dash-support-arrow">›</span>
           </button>
         </div>
 
