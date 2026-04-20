@@ -109,14 +109,24 @@ function App() {
     if (!token) return;
     try {
       const res = await api.getConversations(token);
-      setConversations(res.conversations || []);
+      const convs = res.conversations || [];
+      setConversations(convs);
+      // Auto-align with bridge's active conversation:
+      // Bridge always pins lastActiveConvId to position 0 with status != 'idle'.
+      // If phone hasn't selected a conversation yet, auto-select it so routing is correct.
+      const bridgeActive = convs.find((c: any) => c.status && c.status !== 'idle') || convs[0];
+      if (bridgeActive && !activeConversation) {
+        setActiveConversation(bridgeActive.id);
+        try { await api.triggerTabToggle(bridgeActive.id, bridgeActive.name); } catch {}
+      }
     } catch { /* silent */ }
-  }, [token]);
+  }, [token, activeConversation]);
 
   // Load conversations on mount
   useEffect(() => {
     if (token) loadConversations();
   }, [token, loadConversations]);
+
 
   // Load messages when active conversation changes
   useEffect(() => {
@@ -212,6 +222,7 @@ function App() {
         pendingApprovalsCount={pendingPermissions.length}
         onOpenChat={handleOpenChat}
         onSelectConversation={handleSelectConversation}
+        onRefresh={loadConversations}
         onSettings={() => setScreen('settings')}
         onApprovals={() => setScreen('approvals')}
       onSupport={() => setScreen('support')}
