@@ -2,6 +2,9 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { getEventsUrl, isConnected } from '../services/api';
 import type { Message } from '../services/api';
 
+// Synchronous check — window.Capacitor is injected by the native bridge before JS runs
+const isNativeCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor;
+
 // Capacitor App plugin for native lifecycle events
 // Falls back gracefully when running as a plain web page
 let CapacitorApp: typeof import('@capacitor/app').App | null = null;
@@ -194,13 +197,17 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
     }
 
     // ── Web fallback: visibilitychange (less reliable on iOS PWA, but fine on desktop) ──
+    // IMPORTANT: skip this on native Capacitor — appStateChange already handles it.
+    // Running both causes two simultaneous WS connections and duplicate messages.
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && mountedRef.current && !intentionalDisconnect.current) {
         console.log('[SSE] visibilitychange: visible — reconnect check');
         connect();
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    if (!isNativeCapacitor) {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
 
     // ── Client-side keepalive ping every 25s ──────────────────────────────────
     // Prevents iOS from silently killing the socket while the app is in foreground
