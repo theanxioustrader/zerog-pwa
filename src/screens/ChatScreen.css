@@ -413,8 +413,9 @@
 .input-container {
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
-  /* Cap safe-area at 34px — prevents double-counting with contentInset:automatic */
-  padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+  /* contentInset:automatic in capacitor.config.json handles bottom safe area natively.
+     Do NOT add env(safe-area-inset-bottom) here — it double-counts and creates empty space. */
+  padding-bottom: 0;
   flex-shrink: 0;
 }
 
