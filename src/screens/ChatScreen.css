@@ -252,9 +252,11 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-md);
-  padding-top: calc(64px + max(var(--spacing-md), env(safe-area-inset-top, 12px)));
+  padding-top: 72px; /* flat header height + status bar; avoids double env() calc */
   display: flex;
   flex-direction: column;
+  /* Anchor new messages to the bottom */
+  justify-content: flex-start;
 }
 
 .empty-state {
