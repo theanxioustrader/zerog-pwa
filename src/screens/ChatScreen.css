@@ -16,12 +16,13 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-sm) var(--spacing-lg);
-  padding-top: max(var(--spacing-sm), env(safe-area-inset-top, 12px));
+  /* With contentInset:never, the WebView underlays the status bar.
+     Use env(safe-area-inset-top) to push header content below it. */
+  padding-top: max(env(safe-area-inset-top, 44px), 44px);
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
   z-index: 100;
   min-height: 64px;
-  /* Fixed so keyboard open/close never moves the header */
   position: fixed;
   top: 0;
   left: 0;
@@ -252,11 +253,11 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-md);
-  padding-top: 72px; /* flat header height + status bar; avoids double env() calc */
-  padding-bottom: 16px; /* breathing room above input bar */
+  /* Header min-height (64px) + safe-area-inset-top (44px on most iPhones) + spacing */
+  padding-top: calc(64px + max(env(safe-area-inset-top, 44px), 44px) + 8px);
+  padding-bottom: 16px;
   display: flex;
   flex-direction: column;
-  /* Anchor new messages to the bottom */
   justify-content: flex-start;
 }
 
@@ -413,9 +414,8 @@
 .input-container {
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
-  /* contentInset:automatic in capacitor.config.json handles bottom safe area natively.
-     Do NOT add env(safe-area-inset-bottom) here — it double-counts and creates empty space. */
-  padding-bottom: 0;
+  /* With contentInset:never, we own the bottom safe area — add it here */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   flex-shrink: 0;
 }
 
