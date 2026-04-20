@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { api } from '../services/api';
 import type { Conversation } from '../services/api';
 import './DashboardScreen.css';
@@ -14,6 +14,7 @@ interface Props {
   onSettings: () => void;
   onApprovals: () => void;
   onSupport: () => void;
+  onRefresh: () => Promise<void>;
 }
 
 function relativeTime(ts: number): string {
@@ -42,12 +43,28 @@ export function DashboardScreen({
   onSettings,
   onApprovals,
   onSupport,
+  onRefresh,
 }: Props) {
   const [quickMsg, setQuickMsg] = useState('');
   const [sending, setSending] = useState(false);
   const [macroConfirm, setMacroConfirm] = useState<typeof MACROS[0] | null>(null);
   const [pinging, setPinging] = useState(false);
   const [pingResult, setPingResult] = useState<'ok' | 'fail' | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState(false);
+
+  // Auto-refresh on mount
+  useEffect(() => {
+    handleRefreshConvs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleRefreshConvs = useCallback(async () => {
+    setRefreshing(true);
+    setRefreshError(false);
+    try { await onRefresh(); } catch { setRefreshError(true); }
+    setRefreshing(false);
+  }, [onRefresh]);
 
   const handlePingPC = useCallback(async () => {
     setPinging(true);
@@ -208,7 +225,22 @@ export function DashboardScreen({
 
         {/* Recent Agents */}
         <div className="dash-section">
-          <div className="dash-section-label">RECENT BACKGROUND AGENTS</div>
+          <div className="dash-section-label" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <span>RECENT BACKGROUND AGENTS</span>
+            <button
+              onClick={handleRefreshConvs}
+              disabled={refreshing}
+              style={{background:'none',border:'none',color:'var(--accent)',fontSize:'18px',cursor:'pointer',padding:'0 4px',lineHeight:1}}
+              title="Refresh conversations"
+            >
+              <span style={{display:'inline-block',transition:'transform 0.5s',transform:refreshing?'rotate(360deg)':'none'}}>↻</span>
+            </button>
+          </div>
+          {refreshError && (
+            <div style={{fontSize:12,color:'var(--muted)',padding:'4px 0 8px',textAlign:'center'}}>
+              ⚠ Could not reach your PC — <button onClick={handleRefreshConvs} style={{background:'none',border:'none',color:'var(--accent)',fontSize:12,cursor:'pointer',textDecoration:'underline'}}>retry</button>
+            </div>
+          )}
           {conversations.length === 0 ? (
             <div className="dash-empty">
               <div className="dash-empty-icon">🛰️</div>
