@@ -18,7 +18,7 @@
     "@capacitor/core": "^8.3.1",
     "@capacitor/ios": "^8.3.1",
     "@sentry/capacitor": "^3.2.1",
-    "@sentry/react": "^10.49.0",
+    "@sentry/react": "10.43.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0"
