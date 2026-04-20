@@ -127,6 +127,37 @@ function App() {
     if (token) loadConversations();
   }, [token, loadConversations]);
 
+  // ── Permission polling fallback (4s interval) ──────────────────────────────
+  // Polls /monitor/status via HTTP — works regardless of WebSocket connectivity.
+  // This catches permission prompts even when the phone is on the Railway relay
+  // path and the direct WebSocket (wsClients) is 0.
+  const lastPermStatusRef = useRef<string>('idle');
+  useEffect(() => {
+    if (!token) return;
+    const poll = setInterval(async () => {
+      try {
+        const { status, permissionText, activeConvId } = await api.getMonitorStatus();
+        // Only fire once per permission event (idle→waiting transition)
+        if (status === 'waiting' && lastPermStatusRef.current !== 'waiting') {
+          const perm: PendingPermission = {
+            id: `poll-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            permissionText: permissionText || 'Tool requires approval',
+            conversationId: activeConvId || undefined,
+            ts: Date.now(),
+          };
+          setPendingPermissions(prev => {
+            // Dedup: don't add if we already have a permission with same text
+            const alreadyExists = prev.some(p => p.permissionText === perm.permissionText);
+            return alreadyExists ? prev : [...prev, perm];
+          });
+          setScreen('approvals');
+        }
+        lastPermStatusRef.current = status;
+      } catch { /* silent — bridge may be temporarily unreachable */ }
+    }, 4000);
+    return () => clearInterval(poll);
+  }, [token]);
+
 
   // Load messages when active conversation changes
   useEffect(() => {

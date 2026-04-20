@@ -238,4 +238,16 @@ export const api = {
       if (!data.ok) throw new Error('Bridge unhealthy');
       return data;
    },
+   // Poll /monitor/status — reliable fallback for permission detection
+   // Works via any connection path (Railway, Cloudflare tunnel, or direct)
+   getMonitorStatus: async (): Promise<{ status: string; permissionText: string; activeConvId: string | null }> => {
+      if (!AG_BRIDGE_URL) return { status: 'idle', permissionText: '', activeConvId: null };
+      const res = await fetch(`${AG_BRIDGE_URL.replace(/\/$/, '')}/monitor/status`, {
+        signal: AbortSignal.timeout(4000),
+        headers: { 'x-ag-token': AG_TOKEN },
+      });
+      if (!res.ok) return { status: 'idle', permissionText: '', activeConvId: null };
+      const data = await res.json();
+      return { status: data.status || 'idle', permissionText: data.permissionText || '', activeConvId: data.activeConvId || null };
+   },
 };
