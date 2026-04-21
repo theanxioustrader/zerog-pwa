@@ -66,26 +66,29 @@ const MessageBubble = ({ msg }: { msg: Message }) => {
 
 // Collapsible workspace group for the conversation switcher menu
 const WorkspaceGroup = ({
-  workspace, convs, activeConversation, onSelect
+  workspace, convs, activeConversation, onSelect, showHeader
 }: {
   workspace: string;
   convs: Conversation[];
   activeConversation?: string;
   onSelect: (c: Conversation) => void;
+  showHeader: boolean;
 }) => {
   const [open, setOpen] = useState(true);
   const wsClass = workspace.toLowerCase().replace(/[^a-z]/g, '');
   return (
     <div className="menu-workspace-group">
-      <button className="menu-workspace-header" onClick={() => setOpen(o => !o)}>
-        <span className={`menu-ws-chip ws-chip-${wsClass}`}>{workspace}</span>
-        <span className="menu-ws-count">{convs.length}</span>
-        <span className={`menu-ws-chevron ${open ? 'open' : ''}`}>›</span>
-      </button>
-      {open && convs.slice(0, 8).map(c => (
+      {showHeader && (
+        <button className="menu-workspace-header" onClick={() => setOpen(o => !o)}>
+          <span className={`menu-ws-chip ws-chip-${wsClass}`}>{workspace}</span>
+          <span className="menu-ws-count">{convs.length}</span>
+          <span className={`menu-ws-chevron ${open ? 'open' : ''}`}>›</span>
+        </button>
+      )}
+      {(open || !showHeader) && convs.slice(0, showHeader ? 8 : 10).map(c => (
         <button
           key={c.id}
-          className={`menu-item menu-item-nested ${activeConversation === c.id ? 'active' : ''}`}
+          className={`menu-item ${showHeader ? 'menu-item-nested' : ''} ${activeConversation === c.id ? 'active' : ''}`}
           onClick={() => onSelect(c)}
         >
           <span className="agent-badge">AG</span>
@@ -254,6 +257,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           if (!groups[ws]) groups[ws] = [];
           groups[ws].push(c);
         }
+        const multiWorkspace = Object.keys(groups).length > 1;
         return (
           <div className="menu-overlay" onClick={() => setShowMenu(false)}>
             <div className="menu-box" onClick={(e) => e.stopPropagation()}>
@@ -273,13 +277,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
               <div className="menu-divider" />
 
-              {/* Multilevel workspace groups */}
+              {/* Workspace groups — headers only shown when 2+ workspaces exist */}
               {Object.entries(groups).map(([workspace, convs]) => (
                 <WorkspaceGroup
                   key={workspace}
                   workspace={workspace}
                   convs={convs}
                   activeConversation={activeConversation}
+                  showHeader={multiWorkspace}
                   onSelect={(c) => {
                     setActiveConversation(c.id);
                     setShowMenu(false);

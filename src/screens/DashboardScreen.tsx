@@ -250,21 +250,22 @@ export function DashboardScreen({
           ) : (() => {
             // Group conversations by workspace
             const groups: Record<string, typeof conversations> = {};
-            for (const c of conversations.slice(0, 10)) {
+            for (const c of conversations.slice(0, 15)) {
               const ws = c.workspace || 'Other';
               if (!groups[ws]) groups[ws] = [];
               groups[ws].push(c);
             }
-            const hasWorkspaces = Object.keys(groups).length > 1 || !conversations.every(c => !c.workspace);
+            const multiWorkspace = Object.keys(groups).length > 1;
+            const perGroupLimit = multiWorkspace ? 5 : 8;
             return Object.entries(groups).map(([workspace, convs]) => (
               <div key={workspace}>
-                {hasWorkspaces && (
+                {multiWorkspace && (
                   <div className="dash-workspace-label">
                     <span className={`dash-workspace-chip ws-${workspace.toLowerCase().replace(/[^a-z]/g,'')}`}>{workspace}</span>
                     <span className="dash-workspace-count">{convs.length} agent{convs.length !== 1 ? 's' : ''}</span>
                   </div>
                 )}
-                {convs.slice(0, 5).map(c => (
+                {convs.slice(0, perGroupLimit).map(c => (
                   <button
                     key={c.id}
                     className={`dash-recent-item ${activeConversation === c.id ? 'recent-active' : ''}`}
