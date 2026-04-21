@@ -523,7 +523,7 @@
   color: #818cf8;
   border: 1px solid rgba(99,102,241,0.25);
 }
-.dash-workspace-chip.ws-zerog {
+.dash-workspace-chip.ws-zerogai {
   background: rgba(16,185,129,0.12);
   color: #34d399;
   border-color: rgba(16,185,129,0.25);
@@ -532,6 +532,11 @@
   background: rgba(99,102,241,0.15);
   color: #818cf8;
   border-color: rgba(99,102,241,0.25);
+}
+.dash-workspace-chip.ws-orbitcommerce {
+  background: rgba(251,146,60,0.12);
+  color: #fb923c;
+  border-color: rgba(251,146,60,0.25);
 }
 .dash-workspace-chip.ws-other {
   background: rgba(100,116,139,0.15);
