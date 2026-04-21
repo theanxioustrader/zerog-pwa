@@ -515,3 +515,30 @@
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
+/* Mic / Voice button */
+.mic-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mic-btn:active { background: var(--surface); }
+.mic-btn.mic-active {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.6);
+  animation: micPulse 1s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}

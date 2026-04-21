@@ -83,8 +83,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [attachment, setAttachment] = useState<{ name: string; base64: string } | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   const isOffline = sseStatus === 'error' || sseStatus === 'disconnected';
 
@@ -143,6 +145,33 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleVoice = () => {
+    // Stop if already listening
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      alert('Voice input is not supported on this device.');
+      return;
+    }
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onstart = () => setIsListening(true);
+    rec.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript;
+      setInput(prev => prev ? prev + ' ' + transcript : transcript);
+    };
+    rec.onerror = () => { setIsListening(false); };
+    rec.onend = () => { setIsListening(false); };
+    rec.start();
   };
 
   const activeName = activeConversation 
@@ -295,13 +324,24 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               rows={1}
             />
           </div>
-          <button 
-            type="submit" 
-            className={`send-btn ${(!input.trim() && !attachment || sending) ? 'disabled' : ''}`}
-            disabled={(!input.trim() && !attachment) || sending}
-          >
-            {sending ? <div className="spinner-small" /> : '↑'}
-          </button>
+          {(!input.trim() && !attachment && !sending) ? (
+            <button
+              type="button"
+              className={`mic-btn ${isListening ? 'mic-active' : ''}`}
+              onClick={handleVoice}
+              aria-label="Voice input"
+            >
+              {isListening ? '⏹' : '🎙'}
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className={`send-btn ${sending ? 'disabled' : ''}`}
+              disabled={sending}
+            >
+              {sending ? <div className="spinner-small" /> : '↑'}
+            </button>
+          )}
         </form>
       </div>
     </div>
