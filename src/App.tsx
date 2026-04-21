@@ -150,7 +150,6 @@ function App() {
         const { status, permissionText, activeConvId } = await api.getMonitorStatus();
         if (status === 'waiting') {
           const text = permissionText || 'Antigravity is requesting approval to proceed.';
-          // Add to list only if no matching permission already exists
           const alreadyPending = pendingPermissionsRef.current.some(p => p.permissionText === text);
           if (!alreadyPending) {
             const perm: PendingPermission = {
@@ -160,11 +159,12 @@ function App() {
               ts: Date.now(),
             };
             setPendingPermissions(prev => [...prev, perm]);
+            // Only navigate for NEW permissions, and never interrupt chat
+            if (screenRef.current !== 'approvals' && screenRef.current !== 'chat') {
+              navigateTo('approvals');
+            }
           }
-          // Only auto-navigate if NOT in chat — chat shows its own inline banner
-          if (screenRef.current !== 'approvals' && screenRef.current !== 'chat') {
-            navigateTo('approvals');
-          }
+          // If already pending + not in approvals/chat, don't re-navigate — user may have dismissed it
         } else if (status === 'idle' && pendingPermissionsRef.current.length > 0) {
           // IDE finished — permission was acted on. Auto-clear the pending list.
           setPendingPermissions([]);
@@ -254,7 +254,7 @@ function App() {
         onDeny={(id) => removePermission(id)}
         onApproveAll={handleApproveAll}
         onDenyAll={handleDenyAll}
-        onBack={() => setScreen(prevScreen)}
+        onBack={() => setScreen(prevScreen === 'approvals' ? 'dashboard' : prevScreen)}
       />
     );
   }
