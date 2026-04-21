@@ -107,6 +107,7 @@ export async function sendMessage(text: string, attachment?: { name: string; bas
     : conversationId;
   const res = await fetch(`${AG_BRIDGE_URL}/messages/send`, {
     method: 'POST',
+    signal: AbortSignal.timeout(30000), // 30s — bridge injection can take up to 25s across multiple CDP targets
     headers: {
       'Content-Type': 'application/json',
       'x-ag-token': AG_TOKEN,
