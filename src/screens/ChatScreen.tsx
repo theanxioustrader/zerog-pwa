@@ -63,6 +63,39 @@ const MessageBubble = ({ msg }: { msg: Message }) => {
   );
 };
 
+
+// Collapsible workspace group for the conversation switcher menu
+const WorkspaceGroup = ({
+  workspace, convs, activeConversation, onSelect
+}: {
+  workspace: string;
+  convs: Conversation[];
+  activeConversation?: string;
+  onSelect: (c: Conversation) => void;
+}) => {
+  const [open, setOpen] = useState(true);
+  const wsClass = workspace.toLowerCase().replace(/[^a-z]/g, '');
+  return (
+    <div className="menu-workspace-group">
+      <button className="menu-workspace-header" onClick={() => setOpen(o => !o)}>
+        <span className={`menu-ws-chip ws-chip-${wsClass}`}>{workspace}</span>
+        <span className="menu-ws-count">{convs.length}</span>
+        <span className={`menu-ws-chevron ${open ? 'open' : ''}`}>›</span>
+      </button>
+      {open && convs.slice(0, 8).map(c => (
+        <button
+          key={c.id}
+          className={`menu-item menu-item-nested ${activeConversation === c.id ? 'active' : ''}`}
+          onClick={() => onSelect(c)}
+        >
+          <span className="agent-badge">AG</span>
+          <span className="menu-text">{c.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
 export const ChatScreen: React.FC<ChatScreenProps> = ({
   token,
   messages,
@@ -213,55 +246,67 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           )}
         </div>
       </header>
-      {showMenu && (
-        <div className="menu-overlay" onClick={() => setShowMenu(false)}>
-          <div className="menu-box" onClick={(e) => e.stopPropagation()}>
-            <div className="menu-header-row">
-              <span className="menu-label">SWITCH CONVERSATION</span>
-              <button className="logout-btn" onClick={onLogout}>Logout</button>
-            </div>
-            
-            <button 
-              className={`menu-item ${!activeConversation ? 'active' : ''}`}
-              onClick={() => { setActiveConversation(undefined); setShowMenu(false); }}
-            >
-              <span className="menu-icon">💻</span>
-              <span className="menu-text">Active IDE Session</span>
-            </button>
+      {showMenu && (() => {
+        // Group by workspace for multilevel menu
+        const groups: Record<string, Conversation[]> = {};
+        for (const c of conversations) {
+          const ws = c.workspace || 'Other';
+          if (!groups[ws]) groups[ws] = [];
+          groups[ws].push(c);
+        }
+        return (
+          <div className="menu-overlay" onClick={() => setShowMenu(false)}>
+            <div className="menu-box" onClick={(e) => e.stopPropagation()}>
+              <div className="menu-header-row">
+                <span className="menu-label">SWITCH CONVERSATION</span>
+                <button className="logout-btn" onClick={onLogout}>Logout</button>
+              </div>
 
-            {conversations.slice(0, 4).map(c => (
-              <button 
-                key={c.id}
-                className={`menu-item ${activeConversation === c.id ? 'active' : ''}`}
-                onClick={() => { 
-                  setActiveConversation(c.id); 
-                  setShowMenu(false); 
-                  api.triggerTabToggle(c.id, c.name).catch(()=>{});
+              {/* Active IDE shortcut */}
+              <button
+                className={`menu-item ${!activeConversation ? 'active' : ''}`}
+                onClick={() => { setActiveConversation(undefined); setShowMenu(false); }}
+              >
+                <span className="menu-icon">💻</span>
+                <span className="menu-text">Active IDE Session</span>
+              </button>
+
+              <div className="menu-divider" />
+
+              {/* Multilevel workspace groups */}
+              {Object.entries(groups).map(([workspace, convs]) => (
+                <WorkspaceGroup
+                  key={workspace}
+                  workspace={workspace}
+                  convs={convs}
+                  activeConversation={activeConversation}
+                  onSelect={(c) => {
+                    setActiveConversation(c.id);
+                    setShowMenu(false);
+                    api.triggerTabToggle(c.id, c.name).catch(() => {});
+                  }}
+                />
+              ))}
+
+              <div className="menu-divider" />
+
+              <button
+                className="menu-item"
+                onClick={() => {
+                  const id = 'convo-' + Date.now();
+                  setActiveConversation(id);
+                  api.triggerTabToggle(id, 'New Background Agent').catch(() => {});
+                  setConversations([{id, name: 'New Background Agent', updatedAt: new Date().toISOString()}, ...conversations]);
+                  setShowMenu(false);
                 }}
               >
-                <span className="agent-badge">AG</span>
-                <span className="menu-text">{c.name}</span>
+                <span className="menu-icon">✨</span>
+                <span className="menu-text">New Background Agent</span>
               </button>
-            ))}
-
-            <div className="menu-divider" />
-
-            <button 
-              className="menu-item"
-              onClick={() => {
-                const id = 'convo-' + Date.now();
-                setActiveConversation(id);
-                api.triggerTabToggle(id, 'New Background Agent').catch(()=>{});
-                setConversations([{id, name: 'New Background Agent', updatedAt: new Date().toISOString()}, ...conversations]);
-                setShowMenu(false);
-              }}
-            >
-              <span className="menu-icon">✨</span>
-              <span className="menu-text">New Background Agent</span>
-            </button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Banners */}
       {isOffline && (
