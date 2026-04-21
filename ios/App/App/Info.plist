@@ -49,5 +49,9 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ZeroG uses the microphone to let you send voice messages to your AI agent.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>ZeroG converts your voice to text so you can message your AI agent hands-free.</string>
 </dict>
 </plist>
