@@ -23,6 +23,7 @@ interface ChatScreenProps {
   onSettings?: () => void;
   pendingApprovalsCount?: number;
   onApprovals?: () => void;
+  onRefresh?: () => void;
 }
 
 const TypingIndicator = () => (
@@ -118,6 +119,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   onSettings,
   pendingApprovalsCount = 0,
   onApprovals,
+  onRefresh,
 }) => {
   const [input, setInput] = useState('');
   const [attachment, setAttachment] = useState<{ name: string; base64: string } | null>(null);
@@ -231,8 +233,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               ‹
             </button>
           )}
-          <div className="header-avatar" onClick={() => setShowMenu(true)}>Z</div>
-          <div className="header-info" onClick={() => setShowMenu(true)}>
+          <div className="header-avatar" onClick={() => { setShowMenu(true); onRefresh?.(); }}>Z</div>
+          <div className="header-info" onClick={() => { setShowMenu(true); onRefresh?.(); }}>
             <div className="header-title-row">
               <span className="header-name">{activeName}</span>
               <span className="header-caret">▼</span>

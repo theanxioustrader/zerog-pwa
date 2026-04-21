@@ -295,6 +295,7 @@ function App() {
         onSettings={() => navigateTo('settings')}
         pendingApprovalsCount={pendingPermissions.length}
         onApprovals={() => navigateTo('approvals')}
+        onRefresh={loadConversations}
       />
     </>
   );
