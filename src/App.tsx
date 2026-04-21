@@ -111,6 +111,14 @@ function App() {
         return alreadyExists ? prev : [...prev, perm];
       });
     },
+    onPermissionResolved: (payload) => {
+      // Clear all pending permissions for this conversation — updates both chat and pending page
+      setPendingPermissions(prev =>
+        payload.conversationId
+          ? prev.filter(p => p.conversationId !== payload.conversationId)
+          : [] // No convId = clear all
+      );
+    },
   });
 
   const loadConversations = useCallback(async () => {

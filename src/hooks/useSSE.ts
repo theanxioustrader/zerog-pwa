@@ -20,10 +20,11 @@ interface UseSSEOptions {
   onReply?: (msg: Message) => void;
   onStatusChange?: (connected: boolean) => void;
   onPermissionRequest?: (dialog: { permissionText: string; conversationId?: string; ts?: number }) => void;
+  onPermissionResolved?: (payload: { conversationId?: string; ts?: number }) => void;
   onBridgeError?: (err: { message: string; recoverable: boolean; errorCount: number }) => void;
 }
 
-export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, onBridgeError }: UseSSEOptions) {
+export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError }: UseSSEOptions) {
   const [sseStatus, setSSEStatus] = useState<SSEStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -33,10 +34,10 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
   const lastSeq = useRef<number>(-1);
 
   // Stable references for callbacks to prevent reconnect loops
-  const callbacksRef = useRef({ onReply, onStatusChange, onPermissionRequest, onBridgeError });
+  const callbacksRef = useRef({ onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError });
   useEffect(() => {
-    callbacksRef.current = { onReply, onStatusChange, onPermissionRequest, onBridgeError };
-  }, [onReply, onStatusChange, onPermissionRequest, onBridgeError]);
+    callbacksRef.current = { onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError };
+  }, [onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError]);
 
   const pingWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -150,6 +151,8 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
             callbacksRef.current.onReply?.(msg);
           } else if (data.event === 'permission_request' && data.payload) {
             callbacksRef.current.onPermissionRequest?.(data.payload);
+          } else if (data.event === 'permission_resolved' && data.payload) {
+            callbacksRef.current.onPermissionResolved?.(data.payload);
           } else if (data.event === 'bridge_error' && data.payload) {
             callbacksRef.current.onBridgeError?.(data.payload);
           } else if (data.event === 'agent_status') {
