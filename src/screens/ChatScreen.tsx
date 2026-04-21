@@ -85,7 +85,7 @@ const WorkspaceGroup = ({
           <span className={`menu-ws-chevron ${open ? 'open' : ''}`}>›</span>
         </button>
       )}
-      {(open || !showHeader) && convs.slice(0, showHeader ? 8 : 10).map(c => (
+      {open && convs.slice(0, 12).map(c => (
         <button
           key={c.id}
           className={`menu-item ${showHeader ? 'menu-item-nested' : ''} ${activeConversation === c.id ? 'active' : ''}`}
@@ -257,7 +257,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           if (!groups[ws]) groups[ws] = [];
           groups[ws].push(c);
         }
-        const multiWorkspace = Object.keys(groups).length > 1;
+        // Always show workspace headers so users always see which workspace they're in
         return (
           <div className="menu-overlay" onClick={() => setShowMenu(false)}>
             <div className="menu-box" onClick={(e) => e.stopPropagation()}>
@@ -284,7 +284,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
                   workspace={workspace}
                   convs={convs}
                   activeConversation={activeConversation}
-                  showHeader={multiWorkspace}
+                  showHeader={true}
                   onSelect={(c) => {
                     setActiveConversation(c.id);
                     setShowMenu(false);
