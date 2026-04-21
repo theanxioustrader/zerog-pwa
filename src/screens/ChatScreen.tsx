@@ -21,6 +21,8 @@ interface ChatScreenProps {
   onLogout: () => void;
   onBack?: () => void;
   onSettings?: () => void;
+  pendingApprovalsCount?: number;
+  onApprovals?: () => void;
 }
 
 const TypingIndicator = () => (
@@ -78,6 +80,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   onLogout,
   onBack,
   onSettings,
+  pendingApprovalsCount = 0,
+  onApprovals,
 }) => {
   const [input, setInput] = useState('');
   const [attachment, setAttachment] = useState<{ name: string; base64: string } | null>(null);
@@ -271,6 +275,19 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           🔴 {bridgeError}
           <div className="banner-dismiss">Click to dismiss</div>
         </div>
+      )}
+
+      {/* Approval banner — shows inline in chat without yanking user away */}
+      {pendingApprovalsCount > 0 && onApprovals && (
+        <button className="approval-banner" onClick={onApprovals}>
+          <span className="approval-banner-icon">🔐</span>
+          <span className="approval-banner-text">
+            {pendingApprovalsCount === 1
+              ? 'Approval needed — tap to review'
+              : `${pendingApprovalsCount} approvals pending — tap to review`}
+          </span>
+          <span className="approval-banner-arrow">›</span>
+        </button>
       )}
 
       {/* Message List */}

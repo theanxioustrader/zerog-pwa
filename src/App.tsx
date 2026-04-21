@@ -18,6 +18,12 @@ function App() {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [screen, setScreen] = useState<Screen>('dashboard');
+  const [prevScreen, setPrevScreen] = useState<Screen>('dashboard');
+
+  const navigateTo = useCallback((s: Screen) => {
+    setPrevScreen(prev => prev !== s ? screen : prev);
+    setScreen(s);
+  }, [screen]);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -153,15 +159,15 @@ function App() {
             };
             setPendingPermissions(prev => [...prev, perm]);
           }
-          // Always navigate to approvals if not already there
-          if (screenRef.current !== 'approvals') {
-            setScreen('approvals');
+          // Only auto-navigate if NOT in chat — chat shows its own inline banner
+          if (screenRef.current !== 'approvals' && screenRef.current !== 'chat') {
+            navigateTo('approvals');
           }
         }
       } catch { /* silent — bridge may be temporarily unreachable */ }
     }, 4000);
     return () => clearInterval(poll);
-  }, [token]);
+  }, [token, navigateTo]);
 
 
   // Load messages when active conversation changes
@@ -243,7 +249,7 @@ function App() {
         onDeny={(id) => removePermission(id)}
         onApproveAll={handleApproveAll}
         onDenyAll={handleDenyAll}
-        onBack={() => setScreen('dashboard')}
+        onBack={() => setScreen(prevScreen)}
       />
     );
   }
@@ -284,7 +290,9 @@ function App() {
         setIsTyping={setIsTyping}
         onLogout={handleLogout}
         onBack={handleBackToDashboard}
-        onSettings={() => setScreen('settings')}
+        onSettings={() => navigateTo('settings')}
+        pendingApprovalsCount={pendingPermissions.length}
+        onApprovals={() => navigateTo('approvals')}
       />
     </>
   );
