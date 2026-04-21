@@ -1,6 +1,7 @@
 .support-screen {
   display: flex;
   flex-direction: column;
+  height: 100vh;
   height: 100dvh;
   background: var(--bg);
   overflow: hidden;
@@ -59,16 +60,16 @@
 /* Scroll */
 .support-scroll {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding: 20px 16px;
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 40px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0; /* critical for flex children to scroll on iOS */
+  min-height: 0;
+  /* block layout — flex causes height miscalculation on iOS Capacitor */
+  display: block;
 }
+.support-scroll > * + * { margin-top: 8px; }
 
 /* Section label */
 .support-section-label {
