@@ -127,6 +127,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const sendingRef = useRef(false); // Synchronous guard — prevents double-send (useState is async and misses rapid calls)
 
   const isOffline = sseStatus === 'error' || sseStatus === 'disconnected';
 
@@ -156,12 +157,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if ((!input.trim() && !attachment) || sending) return;
+    if ((!input.trim() && !attachment) || sendingRef.current) return;
     
     const text = input.trim();
     setInput('');
     const currentAttachmentPayload = attachment;
     setAttachment(null);
+    sendingRef.current = true;
     setSending(true);
     
     addMessage({ 
@@ -177,6 +179,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     } catch {
       addMessage({ role: 'agent', text: '⚠️ Failed to deliver. Check your connection.', ts: Date.now() });
     }
+    sendingRef.current = false;
     setSending(false);
   };
 
