@@ -106,8 +106,10 @@ function App() {
       };
       // Add to persistent list
       setPendingPermissions(prev => [...prev, perm]);
-      // Navigate directly to Approvals as a full page
-      setScreen('approvals');
+      // Only auto-navigate if NOT already in chat — chat shows its own inline banner
+      if (screenRef.current !== 'approvals' && screenRef.current !== 'chat') {
+        setScreen('approvals');
+      }
     },
   });
 
@@ -163,6 +165,9 @@ function App() {
           if (screenRef.current !== 'approvals' && screenRef.current !== 'chat') {
             navigateTo('approvals');
           }
+        } else if (status === 'idle' && pendingPermissionsRef.current.length > 0) {
+          // IDE finished — permission was acted on. Auto-clear the pending list.
+          setPendingPermissions([]);
         }
       } catch { /* silent — bridge may be temporarily unreachable */ }
     }, 4000);
