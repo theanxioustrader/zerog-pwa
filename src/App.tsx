@@ -104,12 +104,12 @@ function App() {
         conversationId: dialog.conversationId,
         ts: dialog.ts || Date.now(),
       };
-      // Add to persistent list
-      setPendingPermissions(prev => [...prev, perm]);
-      // Only auto-navigate if NOT already in chat — chat shows its own inline banner
-      if (screenRef.current !== 'approvals' && screenRef.current !== 'chat') {
-        setScreen('approvals');
-      }
+      // Silently add to pending — banner shows in chat, badge shows on dashboard.
+      // Never force-navigate. The user decides when to act.
+      setPendingPermissions(prev => {
+        const alreadyExists = prev.some(p => p.permissionText === perm.permissionText);
+        return alreadyExists ? prev : [...prev, perm];
+      });
     },
   });
 
@@ -159,10 +159,7 @@ function App() {
               ts: Date.now(),
             };
             setPendingPermissions(prev => [...prev, perm]);
-            // Only navigate for NEW permissions, and never interrupt chat
-            if (screenRef.current !== 'approvals' && screenRef.current !== 'chat') {
-              navigateTo('approvals');
-            }
+            // Never auto-navigate — badge on dashboard + banner in chat handles surfacing
           }
           // If already pending + not in approvals/chat, don't re-navigate — user may have dismissed it
         } else if (status === 'idle' && pendingPermissionsRef.current.length > 0) {
