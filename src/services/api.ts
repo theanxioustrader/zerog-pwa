@@ -147,6 +147,7 @@ export interface Conversation {
   id: string;
   name: string;
   updatedAt: string;
+  workspace?: string;
 }
 
 export const api = {

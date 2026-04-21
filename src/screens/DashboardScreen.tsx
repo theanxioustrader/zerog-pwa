@@ -247,19 +247,37 @@ export function DashboardScreen({
               <div className="dash-empty-text">No background agents.</div>
               <div className="dash-empty-sub">They will appear here when active.</div>
             </div>
-          ) : (
-            conversations.slice(0, 5).map(c => (
-              <button
-                key={c.id}
-                className={`dash-recent-item ${activeConversation === c.id ? 'recent-active' : ''}`}
-                onClick={() => onSelectConversation(c)}
-              >
-                <div className="dash-recent-role">AI</div>
-                <span className="dash-recent-text">{c.name}</span>
-                <span className="dash-recent-ts">{relativeTime(new Date(c.updatedAt).getTime())}</span>
-              </button>
-            ))
-          )}
+          ) : (() => {
+            // Group conversations by workspace
+            const groups: Record<string, typeof conversations> = {};
+            for (const c of conversations.slice(0, 10)) {
+              const ws = c.workspace || 'Other';
+              if (!groups[ws]) groups[ws] = [];
+              groups[ws].push(c);
+            }
+            const hasWorkspaces = Object.keys(groups).length > 1 || !conversations.every(c => !c.workspace);
+            return Object.entries(groups).map(([workspace, convs]) => (
+              <div key={workspace}>
+                {hasWorkspaces && (
+                  <div className="dash-workspace-label">
+                    <span className={`dash-workspace-chip ws-${workspace.toLowerCase().replace(/[^a-z]/g,'')}`}>{workspace}</span>
+                    <span className="dash-workspace-count">{convs.length} agent{convs.length !== 1 ? 's' : ''}</span>
+                  </div>
+                )}
+                {convs.slice(0, 5).map(c => (
+                  <button
+                    key={c.id}
+                    className={`dash-recent-item ${activeConversation === c.id ? 'recent-active' : ''}`}
+                    onClick={() => onSelectConversation(c)}
+                  >
+                    <div className="dash-recent-role">AI</div>
+                    <span className="dash-recent-text">{c.name}</span>
+                    <span className="dash-recent-ts">{relativeTime(new Date(c.updatedAt).getTime())}</span>
+                  </button>
+                ))}
+              </div>
+            ));
+          })()}
         </div>
       </div>
 
