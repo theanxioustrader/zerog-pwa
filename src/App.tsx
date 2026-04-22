@@ -100,6 +100,21 @@ function App() {
         if (data?.type === 'agent_reply' && data?.text) {
           addMessage({ role: 'agent', text: data.text, ts: Date.now() } as any);
           setScreen('chat');
+        } else if (data?.type === 'permission_request') {
+          // Tap "Approval Required" push → go straight to Approvals screen
+          if (data?.permissionText) {
+            const perm: PendingPermission = {
+              id: `push-${Date.now()}`,
+              permissionText: data.permissionText,
+              conversationId: data.conversationId || undefined,
+              ts: Date.now(),
+            };
+            setPendingPermissions(prev => {
+              const exists = prev.some(p => p.permissionText === perm.permissionText);
+              return exists ? prev : [...prev, perm];
+            });
+          }
+          setScreen('approvals');
         }
       });
     } catch {
