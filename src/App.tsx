@@ -51,34 +51,6 @@ function App() {
     setLoading(false);
   }, []);
 
-  // Push notification delivery: handle tap when app was backgrounded
-  useEffect(() => {
-    let tapListener: any;
-    let fgListener: any;
-    try {
-      // Foreground: show in chat directly when app is open
-      fgListener = PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        const data = notification.data as any;
-        if (data?.type === 'agent_reply' && data?.text) {
-          addMessage({ role: 'agent', text: data.text, ts: Date.now() } as any);
-        }
-      });
-      // Background tap: user tapped the notification banner
-      tapListener = PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-        const data = action.notification.data as any;
-        if (data?.type === 'agent_reply' && data?.text) {
-          addMessage({ role: 'agent', text: data.text, ts: Date.now() } as any);
-          setScreen('chat'); // navigate to chat on tap
-        }
-      });
-    } catch {
-      // Not native — skip gracefully in web/dev mode
-    }
-    return () => {
-      try { fgListener?.remove(); tapListener?.remove(); } catch {}
-    };
-  }, [addMessage]);
-
 
   const handleLogout = () => {
     auth.clear();
@@ -110,6 +82,31 @@ function App() {
       return next;
     });
   }, [activeConversation]);
+
+  // Push notification delivery: handle tap when app was backgrounded
+  // Must be AFTER addMessage declaration to avoid TS2448
+  useEffect(() => {
+    let tapListener: any;
+    let fgListener: any;
+    try {
+      fgListener = PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        const data = notification.data as any;
+        if (data?.type === 'agent_reply' && data?.text) {
+          addMessage({ role: 'agent', text: data.text, ts: Date.now() } as any);
+        }
+      });
+      tapListener = PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        const data = action.notification.data as any;
+        if (data?.type === 'agent_reply' && data?.text) {
+          addMessage({ role: 'agent', text: data.text, ts: Date.now() } as any);
+          setScreen('chat');
+        }
+      });
+    } catch {
+      // Not native — skip in web/dev mode
+    }
+    return () => { try { fgListener?.remove(); tapListener?.remove(); } catch {} };
+  }, [addMessage]);
 
   const { sseStatus } = useSSE({
     token,
