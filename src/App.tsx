@@ -119,6 +119,10 @@ function App() {
           : [] // No convId = clear all
       );
     },
+    onConversationSwitch: (conversationId) => {
+      // Bridge switched IDE tab — update phone's active conversation so replies aren't filtered
+      setActiveConversation(conversationId);
+    },
   });
 
   const loadConversations = useCallback(async () => {

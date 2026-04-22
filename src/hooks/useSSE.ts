@@ -22,9 +22,10 @@ interface UseSSEOptions {
   onPermissionRequest?: (dialog: { permissionText: string; conversationId?: string; ts?: number }) => void;
   onPermissionResolved?: (payload: { conversationId?: string; ts?: number }) => void;
   onBridgeError?: (err: { message: string; recoverable: boolean; errorCount: number }) => void;
+  onConversationSwitch?: (conversationId: string) => void;
 }
 
-export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError }: UseSSEOptions) {
+export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError, onConversationSwitch }: UseSSEOptions) {
   const [sseStatus, setSSEStatus] = useState<SSEStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,10 +35,10 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
   const lastSeq = useRef<number>(-1);
 
   // Stable references for callbacks to prevent reconnect loops
-  const callbacksRef = useRef({ onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError });
+  const callbacksRef = useRef({ onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError, onConversationSwitch });
   useEffect(() => {
-    callbacksRef.current = { onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError };
-  }, [onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError]);
+    callbacksRef.current = { onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError, onConversationSwitch };
+  }, [onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError, onConversationSwitch]);
 
   const pingWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -157,6 +158,8 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
             callbacksRef.current.onBridgeError?.(data.payload);
           } else if (data.event === 'agent_status') {
             callbacksRef.current.onStatusChange?.(data.payload?.state === 'working' || data.payload?.state === 'idle');
+          } else if (data.event === 'conversation_switched' && data.payload?.conversationId) {
+            callbacksRef.current.onConversationSwitch?.(data.payload.conversationId);
           }
         } catch {
         }
