@@ -173,13 +173,12 @@ function App() {
       const res = await api.getConversations(token);
       const convs = res.conversations || [];
       setConversations(convs);
-      // Auto-align with bridge's active conversation:
-      // Bridge always pins lastActiveConvId to position 0 with status != 'idle'.
-      // If phone hasn't selected a conversation yet, auto-select it so routing is correct.
-      const bridgeActive = convs.find((c: any) => c.status && c.status !== 'idle') || convs[0];
-      if (bridgeActive && !activeConversation) {
-        setActiveConversation(bridgeActive.id);
-        try { await api.triggerTabToggle(bridgeActive.id, bridgeActive.name); } catch {}
+      // Auto-align local activeConversation state with bridge's active conv —
+      // but NEVER call triggerTabToggle here. Tab switching only happens when
+      // the user explicitly picks a conversation from the switch menu.
+      if (!activeConversation && convs.length > 0) {
+        const bridgeActive = convs.find((c: any) => c.status && c.status !== 'idle') || convs[0];
+        if (bridgeActive) setActiveConversation(bridgeActive.id);
       }
     } catch { /* silent */ }
   }, [token, activeConversation]);
