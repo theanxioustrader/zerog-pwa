@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { auth } from './services/auth';
 import { api, setBridgeConnection, clearBridgeConnection, AG_BRIDGE_URL, AG_TOKEN } from './services/api';
 import type { Message, Conversation } from './services/api';
@@ -49,6 +50,35 @@ function App() {
     }
     setLoading(false);
   }, []);
+
+  // Push notification delivery: handle tap when app was backgrounded
+  useEffect(() => {
+    let tapListener: any;
+    let fgListener: any;
+    try {
+      // Foreground: show in chat directly when app is open
+      fgListener = PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        const data = notification.data as any;
+        if (data?.type === 'agent_reply' && data?.text) {
+          addMessage({ role: 'agent', text: data.text, ts: Date.now() } as any);
+        }
+      });
+      // Background tap: user tapped the notification banner
+      tapListener = PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        const data = action.notification.data as any;
+        if (data?.type === 'agent_reply' && data?.text) {
+          addMessage({ role: 'agent', text: data.text, ts: Date.now() } as any);
+          setScreen('chat'); // navigate to chat on tap
+        }
+      });
+    } catch {
+      // Not native — skip gracefully in web/dev mode
+    }
+    return () => {
+      try { fgListener?.remove(); tapListener?.remove(); } catch {}
+    };
+  }, [addMessage]);
+
 
   const handleLogout = () => {
     auth.clear();

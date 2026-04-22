@@ -33,6 +33,7 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
   const mountedRef = useRef(true);
   const intentionalDisconnect = useRef(false);
   const lastSeq = useRef<number>(-1);
+  const seenUuids = useRef<Set<string>>(new Set()); // dedup: never show same message twice
 
   // Stable references for callbacks to prevent reconnect loops
   const callbacksRef = useRef({ onReply, onStatusChange, onPermissionRequest, onPermissionResolved, onBridgeError, onConversationSwitch });
@@ -142,7 +143,19 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
             callbacksRef.current.onStatusChange?.(true);
             if (typeof data.seq === 'number') lastSeq.current = data.seq;
             resetPingWatchdog();
+            // Send resume immediately so bridge replays any messages missed while offline
+            try { ws.send(JSON.stringify({ event: 'resume', lastSeq: lastSeq.current })); } catch {}
           } else if (data.event === 'message_new' && data.payload?.from === 'agent') {
+            // UUID dedup — drop if we've already processed this message
+            const msgUuid = data.payload?.uuid || (data.seq != null ? String(data.seq) : null);
+            if (msgUuid) {
+              if (seenUuids.current.has(msgUuid)) return; // already shown
+              seenUuids.current.add(msgUuid);
+              if (seenUuids.current.size > 100) {
+                const arr = Array.from(seenUuids.current);
+                seenUuids.current = new Set(arr.slice(arr.length - 50));
+              }
+            }
             const msg: Message = {
               role: 'agent',
               text: data.payload.text || '',
