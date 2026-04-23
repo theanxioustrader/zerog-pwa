@@ -214,7 +214,11 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
     if (CapacitorApp) {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive && mountedRef.current && !intentionalDisconnect.current) {
-          console.log('[SSE] Native appStateChange: foregrounded — forcing reconnect');
+          console.log('[SSE] Native appStateChange: foregrounded — force reconnect');
+          // Force-close any zombie socket iOS silently killed — don't trust readyState
+          if (wsRef.current) { try { wsRef.current.close(); } catch {} wsRef.current = null; }
+          clearPingWatchdog();
+          retryCount.current = 0;
           connect();
         }
       }).then(listener => {
@@ -227,7 +231,11 @@ export function useSSE({ token, onReply, onStatusChange, onPermissionRequest, on
     // Running both causes two simultaneous WS connections and duplicate messages.
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && mountedRef.current && !intentionalDisconnect.current) {
-        console.log('[SSE] visibilitychange: visible — reconnect check');
+        console.log('[SSE] visibilitychange: visible — force reconnect');
+        // Close zombie socket before reconnecting
+        if (wsRef.current) { try { wsRef.current.close(); } catch {} wsRef.current = null; }
+        clearPingWatchdog();
+        retryCount.current = 0;
         connect();
       }
     };
