@@ -143,6 +143,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     scrollToBottom();
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'INJECT_PAYLOAD' && event.data?.text) {
+        setInput(event.data.text);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
